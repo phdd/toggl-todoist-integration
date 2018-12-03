@@ -7,7 +7,7 @@ process.env.NODE_ENV = 'test'
 const request = require('request')
 const chai = require('chai')
 const sinon = require('sinon')
-const expect = chai.expect
+const expect = chai.should()
 
 chai.use(require('sinon-chai'))
 require('mocha-sinon')
@@ -30,7 +30,9 @@ describe('Toggl', () => {
     it('should use the first available workspace', () => {
       request.get.returns(workspaces)
       toggl.init('SECRET_KEY')
-      expect(request.get).to.be.calledOnce()
+      request.get.should.have.been.calledWith(
+        'https://www.toggl.com/api/v8/workspaces',
+        { Authorization: 'SECRET_KEY:api_token' })
     })
   })
 
@@ -38,8 +40,8 @@ describe('Toggl', () => {
     describe('Project related Events', () => {
       it('should create a project on a "create project event"', () => {
         toggl.onCreateProject({ name: 'Test Project' })
-        expect(request.post).calledOnce()
-        expect(request.post).calledWith(JSON.stringify(null))
+        request.post.should.have.been.calledOnce()
+        request.post.should.have.been.calledWith(JSON.stringify(null))
       })
     })
   })

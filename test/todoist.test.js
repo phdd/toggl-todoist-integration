@@ -4,7 +4,7 @@ process.env.NODE_ENV = 'test'
 
 const chai = require('chai')
 const sinon = require('sinon')
-const expect = chai.expect
+const expect = chai.should()
 
 chai.use(require('sinon-chai'))
 require('mocha-sinon')
@@ -15,13 +15,13 @@ describe('Todoist', () => {
   describe('as Event Producer', () => {
     describe('Event Forwarding', () => {
       it('should tell on invalid events', () => {
-        expect(() => todoist.forward({}, null))
-          .to.throw('no valid event_name attribute defined')
+        (() => todoist.forward({}, null))
+          .should.throw(Error)
       })
 
       it('should tell on unknown events', () => {
-        expect(() => todoist.forward({ event_name: 'do:this' }, null))
-          .to.throw('Event "do:this" cannot be handled')
+        (() => todoist.forward({ event_name: 'do:this' }, null))
+          .should.throw(Error)
       })
     })
 
@@ -29,8 +29,8 @@ describe('Todoist', () => {
       it('should create a named project on the consumer side', () => {
         const consumer = { onCreateProject: sinon.spy() }
         todoist.project_added({ name: 'Test Project' }, consumer)
-        expect(consumer.onCreateProject)
-          .to.have.been.calledWith({ name: 'Test Project' })
+        consumer.onCreateProject
+          .should.have.been.calledWith({ name: 'Test Project' })
       })
     })
   })
