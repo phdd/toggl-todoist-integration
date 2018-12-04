@@ -10,8 +10,6 @@ expect = chai.should()
 chai.use require('sinon-chai')
 require 'mocha-sinon'
 
-matching = sinon.match
-
 toggl = require '../lib/toggl.js'
 workspaces = require './fixtures/toggl-workspaces.json'
 project = require './fixtures/toggl-project.json'
@@ -51,19 +49,18 @@ describe 'Toggl', ->
 
       toggl.workspaceId.should.be.equal 3134975
 
-  describe 'as Event Consumer', ->
+  describe 'consumes Project related Events', ->
 
     beforeEach ->
-      toggl.requestOptions.Authorization = 'SECRET_KEY:api_token'
       toggl.workspaceId = 3134975
 
-    describe 'Project related Events', ->
+    it 'should create a project on a "create project event"', ->
+      request.post.returns project
 
-      it 'should create a project on a "create project event"', ->
-        request.post.returns project
-        toggl.onCreateProject name: 'Test Project'
-        request.post.should.have.been.calledWith matching
-          uri: "#{togglUrl}/projects"
-          body:
-            wid: 3134975
-            name: 'Test Project'
+      toggl.onCreateProject name: 'Test Project'
+
+      request.post.should.have.been.calledWith
+        uri: '/projects'
+        body:
+          wid: 3134975
+          name: 'Test Project'
