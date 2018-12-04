@@ -49,7 +49,6 @@ describe 'Toggl', ->
 
       toggl.workspaceId.should.be.equal 3134975
 
-
   describe 'consumes Project related Events', ->
 
     beforeEach ->

@@ -7,5 +7,7 @@ module.exports = (context, respond) => {
 
   if (context.headers['Todoist-Webhooks']) {
     respond(null, todoist.forward(context.body, toggl))
+  } else {
+    throw new Error('invalid request')
   }
 }
