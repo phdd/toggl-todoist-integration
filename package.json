@@ -4,13 +4,15 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha",
+    "test": "./node_modules/mocha/bin/mocha --require coffeescript/register",
     "deploy": "npm test && wt create --name todoist-toggl-integration --secrets-file secret.properties --bundle app.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "babel-core": "^6.26.3",
     "chai": "^4.2.0",
+    "coffeescript": "^2.3.2",
     "mocha": "^5.2.0",
     "mocha-sinon": "^2.1.0",
     "sinon": "^7.1.1",
