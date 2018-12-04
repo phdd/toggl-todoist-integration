@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --require coffeescript/register",
+    "test": "./node_modules/mocha/bin/mocha --require coffeescript/register --recursive './spec/*.coffee'",
     "deploy": "npm test && wt create --name todoist-toggl-integration --secrets-file secret.properties --bundle app.js"
   },
   "author": "",
