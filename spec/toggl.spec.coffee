@@ -12,7 +12,10 @@ require 'mocha-sinon'
 
 toggl = require '../lib/toggl.js'
 workspaces = require './fixtures/toggl-workspaces.json'
-workspaceUrl = 'https://www.toggl.com/api/v8/workspaces'
+project = require './fixtures/toggl-project.json'
+
+togglUrl = 'https://www.toggl.com/api/v8'
+options = Authorization: 'SECRET_KEY:api_token'
 
 describe 'Toggl', ->
 
@@ -28,14 +31,13 @@ describe 'Toggl', ->
     it 'should use the first available workspace', ->
       request.get.returns workspaces
       toggl.init 'SECRET_KEY'
-      request.get.should.have.been.calledWith workspaceUrl,
-        Authorization: 'SECRET_KEY:api_token'
+      request.get.should.have.been.calledWith "#{togglUrl}/workspaces", options
 
   describe 'as Event Consumer', ->
 
     describe 'Project related Events', ->
 
       it 'should create a project on a "create project event"', ->
+        request.post.returns project
         toggl.onCreateProject name: 'Test Project'
-        request.post.should.have.been.calledOnce()
-        request.post.should.have.been.calledWith JSON.stringify(null)
+        request.post.should.have.been.calledWith "#{togglUrl}/projects", options
