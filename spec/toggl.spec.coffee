@@ -44,7 +44,7 @@ describe 'Toggl', ->
 
       toggl.init 'SECRET_KEY'
 
-      request.get.should.have.been.calledWith matching
+      request.get.should.have.been.calledWith
         uri: '/workspaces'
 
       toggl.workspaceId.should.be.equal 3134975
