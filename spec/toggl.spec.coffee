@@ -10,33 +10,45 @@ expect = chai.should()
 chai.use require('sinon-chai')
 require 'mocha-sinon'
 
+matching = sinon.match
+
 toggl = require '../lib/toggl.js'
 workspaces = require './fixtures/toggl-workspaces.json'
 project = require './fixtures/toggl-project.json'
-
-togglUrl = 'https://www.toggl.com/api/v8'
 
 describe 'Toggl', ->
 
   beforeEach ->
     sinon.stub request, 'get'
     sinon.stub request, 'post'
+    sinon.spy request, 'defaults'
 
   afterEach ->
     request.get.restore()
     request.post.restore()
+    request.defaults.restore()
 
   describe 'Initialization', ->
-
-    it 'should use the first available workspace and setup authorization', ->
+    
+    it 'should setup the request defaults', ->
       request.get.returns workspaces
+
       toggl.init 'SECRET_KEY'
       
-      request.get.should.have.been.calledWith
-        url: "#{togglUrl}/workspaces",
-        Authorization: 'SECRET_KEY:api_token'
+      request.defaults.should.have.been.calledWith
+        json: true
+        baseUrl: 'https://www.toggl.com/api/v8'
+        headers:
+          Authorization: 'SECRET_KEY:api_token'
 
-      toggl.requestOptions.Authorization.should.be.equal 'SECRET_KEY:api_token'
+    it 'should use the first workspace available', ->
+      request.get.returns workspaces
+
+      toggl.init 'SECRET_KEY'
+
+      request.get.should.have.been.calledWith matching
+        uri: '/workspaces'
+
       toggl.workspaceId.should.be.equal 3134975
 
   describe 'as Event Consumer', ->
@@ -50,8 +62,8 @@ describe 'Toggl', ->
       it 'should create a project on a "create project event"', ->
         request.post.returns project
         toggl.onCreateProject name: 'Test Project'
-        request.post.should.have.been.calledWith
-          Authorization: 'SECRET_KEY:api_token'
-          url: "#{togglUrl}/projects"
+        request.post.should.have.been.calledWith matching
+          uri: "#{togglUrl}/projects"
           body:
+            wid: 3134975
             name: 'Test Project'

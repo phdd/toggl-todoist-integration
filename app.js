@@ -1,5 +1,3 @@
-/* eslint no-unused-vars: "off" */
-
 const todoist = require('./lib/todoist.js')
 const toggl = require('./lib/toggl.js')
 
