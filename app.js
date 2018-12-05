@@ -34,9 +34,17 @@ app.post('/todoist-event', (request, response) => {
       response.status(200).send(togglProject)
     })
     .catch((error) => {
-      response.status(500).send({
-        error: error.message
-      })
+      if (error instanceof ReferenceError) {
+        console.warn(`${request.body.event_name} is not handled right now`)
+        response.status(200).send({
+          warn: error.message
+        })
+      } else {
+        console.error(`${error.message}:\n${request.body}`)
+        response.status(400).send({
+          error: error.message
+        })
+      }
     })
 })
 

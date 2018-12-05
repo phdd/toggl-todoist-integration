@@ -20,9 +20,6 @@ describe 'Todoist', ->
       todoist.forward {}, null
         .should.be.rejectedWith 'no valid event_name attribute defined'
 
-      #(-> todoist.forward {}, null )
-      #  .should.throw Error
-
     it 'should tell on unknown events', ->
       todoist.forward { event_name: 'do:this' }, null
         .should.be.rejectedWith 'Event "do:this" cannot be handled'

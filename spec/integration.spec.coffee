@@ -25,8 +25,8 @@ describe 'Integration', ->
         event_name: 'something:stupid'
         event_data: 'DATA'
       .then (response) ->
-        response.statusCode.should.be.equal 500
-        response.body.error
+        response.statusCode.should.be.equal 200
+        response.body.warn
           .should.be.equal 'Event "something:stupid" cannot be handled'
 
   describe 'Project related Integration', ->
