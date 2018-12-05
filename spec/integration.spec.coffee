@@ -35,8 +35,8 @@ describe 'Integration', ->
       togglProjectCreation =
         nock /toggl\.com/
           .post /projects/
-          .reply 201, (path, project) ->
-            data: project
+          .reply 201, (path, container) ->
+            data: container.project
 
       await request app
         .post '/todoist-event'

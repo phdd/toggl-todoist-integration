@@ -62,5 +62,6 @@ describe 'Toggl', ->
       request.post.should.have.been.calledWithMatch
         uri: '/projects'
         body:
-          wid: 3134975
-          name: 'Test Project'
+          project:
+            wid: 3134975
+            name: 'Test Project'
