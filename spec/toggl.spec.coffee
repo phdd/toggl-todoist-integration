@@ -37,7 +37,7 @@ describe 'Toggl', ->
         json: true
         baseUrl: 'https://www.toggl.com/api/v8'
         headers:
-          Authorization: 'SECRET_KEY:api_token'
+          Authorization: 'Basic U0VDUkVUX0tFWTphcGlfdG9rZW4='
 
     it 'should use the first workspace available', ->
       request.get.callsFake (path, callback) ->
