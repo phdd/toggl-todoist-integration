@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 
 const todoist = require('./lib/todoist.js')
 const toggl = require('./lib/toggl.js')
+const log = require('./lib/log.js')
 
 const secretsFor = (request) => {
   if (process.env.NODE_ENV !== 'test') {
@@ -35,12 +36,13 @@ app.post('/todoist-event', (request, response) => {
     })
     .catch((error) => {
       if (error instanceof ReferenceError) {
-        console.warn(`${request.body.event_name} is not handled right now`)
+        log.warn('Unhandled Event', { name: request.body.event_name })
         response.status(200).send({
           warn: error.message
         })
       } else {
-        console.error(`${error.message}:\n${request.body}`)
+        log.warn('Unknown Error',
+          { message: error.message, body: request.body })
         response.status(400).send({
           error: error.message
         })
