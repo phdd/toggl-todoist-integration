@@ -5,20 +5,25 @@
   "main": "app.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --require coffeescript/register --recursive './spec/*.coffee'",
-    "deploy": "npm test && wt create --name todoist-toggl-integration --secrets-file secret.properties --bundle app.js"
+    "deploy": "npm test && wt create --name todoist-toggl-integration --secrets-file secret.properties  --meta wt-compiler=webtask-tools/express --bundle app.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "babel-core": "^6.26.3",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "coffeescript": "^2.3.2",
     "mocha": "^5.2.0",
     "mocha-sinon": "^2.1.0",
+    "nock": "^10.0.3",
     "sinon": "^7.1.1",
-    "sinon-chai": "^3.3.0"
+    "sinon-chai": "^3.3.0",
+    "supertest": "^3.3.0"
   },
   "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
     "request": "^2.88.0"
   }
 }

@@ -5,8 +5,8 @@ process.env.NODE_ENV = 'test'
 request = require 'request'
 chai = require 'chai'
 sinon = require 'sinon'
-expect = chai.should()
 
+chai.should()
 chai.use require('sinon-chai')
 require 'mocha-sinon'
 
@@ -27,7 +27,7 @@ describe 'Toggl', ->
     request.defaults.restore()
 
   describe 'Initialization', ->
-    
+
     it 'should setup the request defaults', ->
       request.get.returns workspaces
 
@@ -40,18 +40,18 @@ describe 'Toggl', ->
           Authorization: 'SECRET_KEY:api_token'
 
     it 'should use the first workspace available', ->
-      request.get.returns workspaces
+      request.get.callsFake (path, callback) ->
+        callback null, null, workspaces
 
-      toggl.init 'SECRET_KEY'
+      await toggl.init 'SECRET_KEY'
 
-      request.get.should.have.been.calledWith
-        uri: '/workspaces'
-
+      request.get.should.have.been.calledWithMatch uri: '/workspaces'
       toggl.workspaceId.should.be.equal 3134975
 
   describe 'consumes Project related Events', ->
 
     beforeEach ->
+      toggl.api = request.defaults()
       toggl.workspaceId = 3134975
 
     it 'should create a project on a "create project event"', ->
@@ -59,7 +59,7 @@ describe 'Toggl', ->
 
       toggl.onCreateProject name: 'Test Project'
 
-      request.post.should.have.been.calledWith
+      request.post.should.have.been.calledWithMatch
         uri: '/projects'
         body:
           wid: 3134975

@@ -4,7 +4,10 @@ process.env.NODE_ENV = 'test'
 
 chai = require('chai')
 sinon = require('sinon')
-expect = chai.should()
+
+chai.should()
+
+chai.use require('chai-as-promised')
 chai.use require('sinon-chai')
 
 require 'mocha-sinon'
@@ -14,12 +17,15 @@ describe 'Todoist', ->
 
   describe 'Event Forwarding', ->
     it 'should tell on invalid events', ->
-      (-> todoist.forward {}, null )
-        .should.throw Error
+      todoist.forward {}, null
+        .should.be.rejectedWith 'no valid event_name attribute defined'
+
+      #(-> todoist.forward {}, null )
+      #  .should.throw Error
 
     it 'should tell on unknown events', ->
-      (-> todoist.forward { event_name: 'do:this' }, null )
-        .should.throw Error
+      todoist.forward { event_name: 'do:this' }, null
+        .should.be.rejectedWith 'Event "do:this" cannot be handled'
 
   describe 'produces Project related Events', ->
 
