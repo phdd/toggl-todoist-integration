@@ -1,13 +1,11 @@
-const Express = require('express')
+const app = require('express')()
 const bodyParser = require('body-parser')
 
 const todoist = require('./lib/todoist.js')
 const toggl = require('./lib/toggl.js')
 
-const app = new Express()
-
 const secretsFor = (request) => {
-  if (process.env.NODE_ENV === 'webtask') {
+  if (process.env.NODE_ENV !== 'test') {
     return request.webtaskContext.secrets
   } else {
     return {
