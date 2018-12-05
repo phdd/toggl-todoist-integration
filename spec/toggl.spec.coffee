@@ -12,18 +12,21 @@ require 'mocha-sinon'
 
 toggl = require '../lib/toggl.js'
 workspaces = require './fixtures/toggl-workspaces.json'
-project = require './fixtures/toggl-project.json'
+projectFixture = require './fixtures/toggl-project.json'
+projectsFixture = require './fixtures/toggl-projects.json'
 
 describe 'Toggl', ->
 
   beforeEach ->
     sinon.stub request, 'get'
     sinon.stub request, 'post'
+    sinon.stub request, 'put'
     sinon.spy request, 'defaults'
 
   afterEach ->
     request.get.restore()
     request.post.restore()
+    request.put.restore()
     request.defaults.restore()
 
   describe 'Initialization', ->
@@ -54,8 +57,8 @@ describe 'Toggl', ->
       toggl.api = request.defaults()
       toggl.workspaceId = 3134975
 
-    it 'should create a project on a "create project event"', ->
-      request.post.returns project
+    it 'should create a project on a "create project" event', ->
+      request.post.returns projectFixture
 
       toggl.onCreateProject name: 'Test Project'
 
@@ -65,3 +68,20 @@ describe 'Toggl', ->
           project:
             wid: 3134975
             name: 'Test Project'
+
+    xit 'should archive a project on a "archive project" event', ->
+
+    describe 'Helper', ->
+
+      it 'should be able to get all workspace projects', ->
+        request.get.callsFake (path, callback) ->
+          callback null, null, projectsFixture
+
+        projects = await toggl.fetchProjects()
+
+        request.get.should.have.been.calledWithMatch
+          uri: '/workspaces/3134975/projects'
+
+        projects.should.be.equal projectsFixture
+        
+      xit 'should be able to update projects', ->
