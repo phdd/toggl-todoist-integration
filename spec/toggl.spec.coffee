@@ -246,7 +246,7 @@ describe 'Toggl', ->
 
       request.get.should.have.been.calledOnce
       request.get.should.have.been.calledWithMatch
-        uri: '/workspaces/3134975/projects'
+        uri: '/workspaces/3134975/projects?active=both'
 
       projects.should.be.equal projectsFixture
       
