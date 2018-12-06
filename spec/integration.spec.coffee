@@ -112,3 +112,49 @@ describe 'Integration', ->
 
             response.statusCode.should.be.equal 200
             response.body.should.be.empty
+
+    describe 'Project deleted event reaction', ->
+
+      togglProjectFetching = null
+      togglProjectDeletion = null
+
+      beforeEach ->
+        togglProjectFetching =
+          nock /toggl\.com/
+            .get /workspaces\/.+\/projects/
+            .reply 200, projectsFixture
+
+        togglProjectDeletion =
+          nock /toggl\.com/
+            .delete /projects/
+            .reply 200, null
+
+      it 'should delete a Toggl Project when Todoist does', ->
+        await request app
+          .post '/todoist-event'
+          .send
+            event_name: 'project:deleted'
+            event_data:
+              name: 'Project C'
+
+          .then (response) ->
+            togglProjectFetching.isDone().should.be.true
+            togglProjectDeletion.isDone().should.be.true
+
+            response.body.should.be.empty
+            response.statusCode.should.be.equal 200
+
+      it 'should not do anything if there\'s no such project on Toggl', ->
+        await request app
+          .post '/todoist-event'
+          .send
+            event_name: 'project:deleted'
+            event_data:
+              name: 'I am no such Project'
+
+          .then (response) ->
+            togglProjectFetching.isDone().should.be.true
+            togglProjectDeletion.isDone().should.be.false
+
+            response.statusCode.should.be.equal 200
+            response.body.should.be.empty

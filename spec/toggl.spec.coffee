@@ -21,12 +21,14 @@ describe 'Toggl', ->
     sinon.stub request, 'get'
     sinon.stub request, 'post'
     sinon.stub request, 'put'
+    sinon.stub request, 'del'
     sinon.spy request, 'defaults'
 
   afterEach ->
     request.get.restore()
     request.post.restore()
     request.put.restore()
+    request.del.restore()
     request.defaults.restore()
 
   describe 'Initialization', ->
@@ -72,38 +74,74 @@ describe 'Toggl', ->
             wid: 3134975
             name: 'Test Project'
 
-    it 'should archive a project on a "archive project" event', ->
-      fetchProjects = sinon.stub toggl, 'fetchProjects'
-        .returns Promise.resolve(projectsFixture)
+    describe 'Project Archive', ->
 
-      updateProject = sinon.stub toggl, 'updateProject'
-        .returns Promise.resolve(projectFixture)
+      it 'should archive a project on a "archive project" event', ->
+        fetchProjects = sinon.stub toggl, 'fetchProjects'
+          .returns Promise.resolve(projectsFixture)
 
-      await toggl.onArchiveProject name: 'Project C'
+        updateProject = sinon.stub toggl, 'updateProject'
+          .returns Promise.resolve(projectFixture)
 
-      fetchProjects.restore()
-      updateProject.restore()
+        await toggl.onArchiveProject name: 'Project C'
 
-      fetchProjects.should.have.been.calledOnce
-      updateProject.should.have.been.calledOnce
+        fetchProjects.restore()
+        updateProject.restore()
 
-      updateProject.should.have.been.calledWithMatch
-        id: 148091152
-        active: false
+        fetchProjects.should.have.been.calledOnce
+        updateProject.should.have.been.calledOnce
 
-    it 'should archive nothing if there\'s no such project', ->
-      fetchProjects = sinon.stub toggl, 'fetchProjects'
-        .returns Promise.resolve(projectsFixture)
+        updateProject.should.have.been.calledWithMatch
+          id: 148091152
+          active: false
 
-      updateProject = sinon.stub toggl, 'updateProject'
+      it 'should archive nothing if there\'s no such project', ->
+        fetchProjects = sinon.stub toggl, 'fetchProjects'
+          .returns Promise.resolve(projectsFixture)
 
-      await toggl.onArchiveProject 'This Project does not exist'
+        updateProject = sinon.stub toggl, 'updateProject'
 
-      fetchProjects.restore()
-      updateProject.restore()
+        await toggl.onArchiveProject 'This Project does not exist'
 
-      fetchProjects.should.have.been.calledOnce
-      updateProject.should.not.have.been.called
+        fetchProjects.restore()
+        updateProject.restore()
+
+        fetchProjects.should.have.been.calledOnce
+        updateProject.should.not.have.been.called
+
+    describe 'Project Deletion', ->
+      
+      it 'should delete a project on a "delete project" event', ->
+        fetchProjects = sinon.stub toggl, 'fetchProjects'
+          .returns Promise.resolve(projectsFixture)
+
+        deleteProject = sinon.stub toggl, 'deleteProject'
+          .returns Promise.resolve()
+
+        await toggl.onDeleteProject name: 'Project C'
+
+        fetchProjects.restore()
+        deleteProject.restore()
+
+        fetchProjects.should.have.been.calledOnce
+        deleteProject.should.have.been.calledOnce
+
+        deleteProject.should.have.been.calledWithMatch
+          id: 148091152
+
+      it 'should delete nothing if there\'s no such project', ->
+        fetchProjects = sinon.stub toggl, 'fetchProjects'
+          .returns Promise.resolve(projectsFixture)
+
+        deleteProject = sinon.stub toggl, 'deleteProject'
+
+        await toggl.onDeleteProject 'This Project does not exist'
+
+        fetchProjects.restore()
+        deleteProject.restore()
+
+        fetchProjects.should.have.been.calledOnce
+        deleteProject.should.not.have.been.called
 
     describe 'Helper', ->
 
@@ -133,3 +171,17 @@ describe 'Toggl', ->
           body:
             project:
               active: false
+
+      it 'should be able to delete projects', ->
+        request.get.callsFake (path, callback) ->
+          callback null, null, projectsFixture
+
+        request.del.callsFake (path, callback) ->
+          callback null, null, null
+
+        await toggl.deleteProject
+          id: '148091152'
+
+        request.del.should.have.been.calledOnce
+        request.del.should.have.been.calledWithMatch
+          uri: '/projects/148091152'

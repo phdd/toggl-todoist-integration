@@ -41,3 +41,11 @@ describe 'Todoist', ->
 
       consumer.onArchiveProject
         .should.have.been.calledOnceWith name: 'Test Project'
+
+    it 'should delete projects on the consumer side', ->
+      consumer = onDeleteProject: sinon.spy()
+
+      todoist.project_deleted { name: 'Test Project' }, consumer
+
+      consumer.onDeleteProject
+        .should.have.been.calledOnceWith name: 'Test Project'
