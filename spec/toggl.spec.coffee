@@ -160,22 +160,28 @@ describe 'Toggl', ->
           id: 3134975
           active: true
 
-      it 'should restore nothing if there\'s no such project', ->
+      it 'should create a project if it does not exist', ->
         findProjectByName = sinon.stub toggl, 'findProjectByName'
           .returns Promise.resolve(null)
 
         updateProject = sinon.stub toggl, 'updateProject'
+        createProject = sinon.stub toggl, 'createProject'
 
         await toggl.onUnarchiveProject name: 'This Project does not exist'
 
         findProjectByName.restore()
         updateProject.restore()
+        createProject.restore()
 
         findProjectByName.should.have.been.calledOnce
         findProjectByName.should.have.been
           .calledWith 'This Project does not exist'
 
         updateProject.should.not.have.been.called
+        
+        createProject.should.have.been.calledOnce
+        createProject.should.have.been.calledWith
+          name: 'This Project does not exist'
 
     describe 'Project Deletion', ->
 

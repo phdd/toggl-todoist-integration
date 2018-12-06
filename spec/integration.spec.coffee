@@ -41,6 +41,7 @@ describe 'Integration', ->
 
     togglProjectFetching = null
     togglProjectUpdate = null
+    togglProjectCreation = null
 
     beforeEach ->
       togglProjectFetching =
@@ -54,16 +55,13 @@ describe 'Integration', ->
           .reply 200, (path, container) ->
             return data: container.project
 
-    describe 'Project created event reaction', ->
-      
-      togglProjectCreation = null
+      togglProjectCreation =
+        nock /toggl\.com/
+          .post /projects/
+          .reply 201, (path, container) ->
+            data: container.project
 
-      beforeEach ->
-        togglProjectCreation =
-          nock /toggl\.com/
-            .post /projects/
-            .reply 201, (path, container) ->
-              data: container.project
+    describe 'Project created event reaction', ->
 
       it 'should create Toggl Project on Todoist Project Creation', ->
         await request app
@@ -189,7 +187,7 @@ describe 'Integration', ->
             project.id.should.be.equal 148091152
             project.active.should.be.true
 
-      it 'should not do anything if there\'s no such project on Toggl', ->
+      it 'should create a Toggle Project if it does not exist', ->
         await request app
           .post '/todoist-event'
           .send
@@ -200,7 +198,10 @@ describe 'Integration', ->
           .then (response) ->
             togglProjectFetching.isDone().should.be.true
             togglProjectUpdate.isDone().should.be.false
+            togglProjectCreation.isDone().should.be.true
+
+            project = response.body.data
 
             response.statusCode.should.be.equal 200
-            response.body.should.be.empty
-      
+            project.name.should.be.equal 'I am no such Project'
+            project.wid.should.be.equal 3134975
