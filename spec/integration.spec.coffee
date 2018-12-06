@@ -37,6 +37,8 @@ describe 'Integration', ->
         response.body.warn
           .should.be.equal 'Event "something:stupid" cannot be handled'
 
+  xit 'should drop events already seen', ->
+
   describe 'Project related Integration', ->
 
     togglProjectFetching = null

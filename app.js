@@ -17,6 +17,10 @@ const secretsFor = (request) => {
 
 const hasBeenInitialized = false
 
+// TODO: write middleware for X-Todoist-Delivery-ID buffer
+// see https://developer.todoist.com/sync/v7/?shell#request-format
+// see https://stackoverflow.com/a/4852052
+
 app.use((request, response, next) => {
   if (!hasBeenInitialized) {
     toggl

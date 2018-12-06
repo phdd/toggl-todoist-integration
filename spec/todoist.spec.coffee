@@ -197,3 +197,5 @@ describe 'Todoist', ->
 
         findProjectByName.should.have.been
           .calledWith 'This Project does not exist (123)'
+
+    xdescribe 'project:update', ->
