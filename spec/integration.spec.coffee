@@ -69,6 +69,7 @@ describe 'Integration', ->
           .send
             event_name: 'project:added'
             event_data:
+              id: 123
               name: 'Test Project'
 
           .then (response) ->
@@ -76,7 +77,7 @@ describe 'Integration', ->
             togglProjectCreation.isDone().should.be.true
 
             response.statusCode.should.be.equal 200
-            project.name.should.be.equal 'Test Project'
+            project.name.should.be.equal 'Test Project (123)'
             project.wid.should.be.equal 3134975
 
       it 'should not do anything if there\'s already a project on Toggl', ->
@@ -85,6 +86,7 @@ describe 'Integration', ->
           .send
             event_name: 'project:added'
             event_data:
+              id: 123
               name: 'An awesome project'
 
           .then (response) ->
@@ -102,6 +104,7 @@ describe 'Integration', ->
           .send
             event_name: 'project:archived'
             event_data:
+              id: 123
               name: 'Project C'
 
           .then (response) ->
@@ -119,6 +122,7 @@ describe 'Integration', ->
           .send
             event_name: 'project:archived'
             event_data:
+              id: 123
               name: 'I am no such Project'
 
           .then (response) ->
@@ -144,6 +148,7 @@ describe 'Integration', ->
           .send
             event_name: 'project:deleted'
             event_data:
+              id: 123
               name: 'Project C'
 
           .then (response) ->
@@ -159,6 +164,7 @@ describe 'Integration', ->
           .send
             event_name: 'project:deleted'
             event_data:
+              id: 123
               name: 'I am no such Project'
 
           .then (response) ->
@@ -176,6 +182,7 @@ describe 'Integration', ->
           .send
             event_name: 'project:unarchived'
             event_data:
+              id: 123
               name: 'Project C'
 
           .then (response) ->
@@ -193,6 +200,7 @@ describe 'Integration', ->
           .send
             event_name: 'project:unarchived'
             event_data:
+              id: 123
               name: 'I am no such Project'
 
           .then (response) ->
@@ -203,5 +211,5 @@ describe 'Integration', ->
             project = response.body.data
 
             response.statusCode.should.be.equal 200
-            project.name.should.be.equal 'I am no such Project'
+            project.name.should.be.equal 'I am no such Project (123)'
             project.wid.should.be.equal 3134975

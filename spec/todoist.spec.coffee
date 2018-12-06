@@ -44,17 +44,16 @@ describe 'Todoist', ->
         createProject = sinon.stub toggl, 'createProject'
           .returns Promise.resolve(projectFixture)
 
-        await todoist.project_added name: 'Test Project', toggl
+        await todoist.project_added id: 123, name: 'Test Project', toggl
         
         findProjectByName.restore()
         createProject.restore()
 
         findProjectByName.should.have.been.calledOnce
-        findProjectByName.should.have.been.calledWith 'Test Project'
+        findProjectByName.should.have.been.calledWith 'Test Project (123)'
 
         createProject.should.have.been.calledOnce
-        createProject.should.have.been.calledWithMatch
-          name: 'Test Project'
+        createProject.should.have.been.calledWith name: 'Test Project (123)'
 
       it 'should not create the project if it exists already', ->
         findProjectByName = sinon.stub toggl, 'findProjectByName'
@@ -62,14 +61,13 @@ describe 'Todoist', ->
 
         createProject = sinon.stub toggl, 'createProject'
 
-        await todoist.project_added name: 'An awesome project', toggl
+        await todoist.project_added id: 123, name: 'An awesome project', toggl
 
         findProjectByName.restore()
         createProject.restore()
 
         findProjectByName.should.have.been.calledOnce
-        findProjectByName.should.have.been
-          .calledWith 'An awesome project'
+        findProjectByName.should.have.been.calledWith 'An awesome project (123)'
 
         createProject.should.not.have.been.called
 
@@ -82,13 +80,13 @@ describe 'Todoist', ->
         updateProject = sinon.stub toggl, 'updateProject'
           .returns Promise.resolve(projectFixture)
 
-        await todoist.project_archived name: 'Project C', toggl
+        await todoist.project_archived id: 123, name: 'Project C', toggl
 
         findProjectByName.restore()
         updateProject.restore()
 
         findProjectByName.should.have.been.calledOnce
-        findProjectByName.should.have.been.calledWith 'Project C'
+        findProjectByName.should.have.been.calledWith 'Project C (123)'
 
         updateProject.should.have.been.calledOnce
         updateProject.should.have.been.calledWithMatch
@@ -102,14 +100,14 @@ describe 'Todoist', ->
         updateProject = sinon.stub toggl, 'updateProject'
 
         await todoist.project_archived
-          name: 'This Project does not exist', toggl
+          id: 123, name: 'This Project does not exist', toggl
 
         findProjectByName.restore()
         updateProject.restore()
 
         findProjectByName.should.have.been.calledOnce
         findProjectByName.should.have.been
-          .calledWith 'This Project does not exist'
+          .calledWith 'This Project does not exist (123)'
 
         updateProject.should.not.have.been.called
 
@@ -122,13 +120,13 @@ describe 'Todoist', ->
         updateProject = sinon.stub toggl, 'updateProject'
           .returns Promise.resolve(projectFixture)
 
-        await todoist.project_unarchived name: 'Project C', toggl
+        await todoist.project_unarchived id: 123, name: 'Project C', toggl
 
         findProjectByName.restore()
         updateProject.restore()
 
         findProjectByName.should.have.been.calledOnce
-        findProjectByName.should.have.been.calledWith 'Project C'
+        findProjectByName.should.have.been.calledWith 'Project C (123)'
 
         updateProject.should.have.been.calledOnce
         updateProject.should.have.been.calledWithMatch
@@ -143,7 +141,7 @@ describe 'Todoist', ->
         createProject = sinon.stub toggl, 'createProject'
 
         await todoist.project_unarchived
-          name: 'This Project does not exist', toggl
+          id: 123, name: 'This Project does not exist', toggl
 
         findProjectByName.restore()
         updateProject.restore()
@@ -151,13 +149,13 @@ describe 'Todoist', ->
 
         findProjectByName.should.have.been.calledOnce
         findProjectByName.should.have.been
-          .calledWith 'This Project does not exist'
+          .calledWith 'This Project does not exist (123)'
 
         updateProject.should.not.have.been.called
         
         createProject.should.have.been.calledOnce
         createProject.should.have.been.calledWith
-          name: 'This Project does not exist'
+          name: 'This Project does not exist (123)'
 
     describe 'project:deleted', ->
 
@@ -174,7 +172,7 @@ describe 'Todoist', ->
         findProjectByName = sinon.stub toggl, 'findProjectByName'
           .returns Promise.resolve(projectFixture.data)
 
-        await todoist.project_deleted name: 'Project C', toggl
+        await todoist.project_deleted id: 123, name: 'Project C', toggl
 
         findProjectByName.restore()
 
@@ -185,7 +183,7 @@ describe 'Todoist', ->
           id: 3134975
 
       it 'should delete nothing if there\'s no such project', ->
-        project = name: 'This Project does not exist'
+        project = id: 123, name: 'This Project does not exist'
         
         findProjectByName = sinon.stub toggl, 'findProjectByName'
           .returns Promise.resolve(null)
@@ -197,4 +195,5 @@ describe 'Todoist', ->
         findProjectByName.should.have.been.calledOnce
         deleteProject.should.not.have.been.called
 
-        findProjectByName.should.have.been.calledWith project.name
+        findProjectByName.should.have.been
+          .calledWith 'This Project does not exist (123)'

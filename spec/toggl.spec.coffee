@@ -129,7 +129,7 @@ describe 'Toggl', ->
         fetchProjects.restore()
 
       it 'should be able to find projects by name', ->
-        await toggl.findProjectByName 'Project C'
+        await toggl.findProjectByName 'Project C (123)'
           .then (project) ->
             project.id.should.be.equal 148091152
 
