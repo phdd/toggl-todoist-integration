@@ -79,7 +79,7 @@ describe 'Toggl', ->
       updateProject = sinon.stub toggl, 'updateProject'
         .returns Promise.resolve(projectFixture)
 
-      await toggl.onArchiveProject 'Project C'
+      await toggl.onArchiveProject name: 'Project C'
 
       fetchProjects.restore()
       updateProject.restore()
@@ -90,6 +90,20 @@ describe 'Toggl', ->
       updateProject.should.have.been.calledWithMatch
         id: 148091152
         active: false
+
+    it 'should archive nothing if there\'s no such project', ->
+      fetchProjects = sinon.stub toggl, 'fetchProjects'
+        .returns Promise.resolve(projectsFixture)
+
+      updateProject = sinon.stub toggl, 'updateProject'
+
+      await toggl.onArchiveProject 'This Project does not exist'
+
+      fetchProjects.restore()
+      updateProject.restore()
+
+      fetchProjects.should.have.been.calledOnce
+      updateProject.should.not.have.been.called
 
     describe 'Helper', ->
 

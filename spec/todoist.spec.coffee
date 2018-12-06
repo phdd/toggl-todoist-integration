@@ -32,4 +32,12 @@ describe 'Todoist', ->
       todoist.project_added { name: 'Test Project' }, consumer
 
       consumer.onCreateProject
-        .should.have.been.calledWith name: 'Test Project'
+        .should.have.been.calledOnceWith name: 'Test Project'
+
+    it 'should archive projects on the consumer side', ->
+      consumer = onArchiveProject: sinon.spy()
+
+      todoist.project_archived { name: 'Test Project' }, consumer
+
+      consumer.onArchiveProject
+        .should.have.been.calledOnceWith name: 'Test Project'
