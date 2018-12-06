@@ -35,7 +35,8 @@ describe 'Toggl', ->
       request.get.returns workspaces
 
       toggl.init 'SECRET_KEY'
-      
+
+      request.defaults.should.have.been.calledOnce
       request.defaults.should.have.been.calledWith
         json: true
         baseUrl: 'https://www.toggl.com/api/v8'
@@ -48,6 +49,7 @@ describe 'Toggl', ->
 
       await toggl.init 'SECRET_KEY'
 
+      request.get.should.have.been.calledOnce
       request.get.should.have.been.calledWithMatch uri: '/workspaces'
       toggl.workspaceId.should.be.equal 3134975
 
@@ -62,6 +64,7 @@ describe 'Toggl', ->
 
       toggl.onCreateProject name: 'Test Project'
 
+      request.post.should.have.been.calledOnce
       request.post.should.have.been.calledWithMatch
         uri: '/projects'
         body:
@@ -69,7 +72,24 @@ describe 'Toggl', ->
             wid: 3134975
             name: 'Test Project'
 
-    xit 'should archive a project on a "archive project" event', ->
+    it 'should archive a project on a "archive project" event', ->
+      fetchProjects = sinon.stub toggl, 'fetchProjects'
+        .returns Promise.resolve(projectsFixture)
+
+      updateProject = sinon.stub toggl, 'updateProject'
+        .returns Promise.resolve(projectFixture)
+
+      await toggl.onArchiveProject 'Project C'
+
+      fetchProjects.restore()
+      updateProject.restore()
+
+      fetchProjects.should.have.been.calledOnce
+      updateProject.should.have.been.calledOnce
+
+      updateProject.should.have.been.calledWithMatch
+        id: 148091152
+        active: false
 
     describe 'Helper', ->
 
@@ -79,9 +99,23 @@ describe 'Toggl', ->
 
         projects = await toggl.fetchProjects()
 
+        request.get.should.have.been.calledOnce
         request.get.should.have.been.calledWithMatch
           uri: '/workspaces/3134975/projects'
 
         projects.should.be.equal projectsFixture
         
-      xit 'should be able to update projects', ->
+      it 'should be able to update projects', ->
+        request.put.callsFake (path, callback) ->
+          callback null, null, projectFixture
+
+        projects = await toggl.updateProject
+          id: 3134975
+          active: false
+
+        request.put.should.have.been.calledOnce
+        request.put.should.have.been.calledWithMatch
+          uri: '/projects/3134975'
+          body:
+            project:
+              active: false
