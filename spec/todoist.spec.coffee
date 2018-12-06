@@ -24,7 +24,7 @@ describe 'Todoist', ->
       todoist.forward { event_name: 'do:this' }, null
         .should.be.rejectedWith 'Event "do:this" cannot be handled'
 
-  describe 'produces Project related Events', ->
+  describe 'Project related Event Production', ->
 
     it 'should create a named project on the consumer side', ->
       consumer = onCreateProject: sinon.spy()

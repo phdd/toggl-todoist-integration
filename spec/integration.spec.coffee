@@ -39,15 +39,26 @@ describe 'Integration', ->
 
   describe 'Project related Integration', ->
 
-    describe 'Project created event reaction', ->
+    togglProjectFetching = null
 
-      it 'should create Toggl Project on Todoist Project Creation', ->
+    beforeEach ->
+      togglProjectFetching =
+        nock /toggl\.com/
+          .get /workspaces\/.+\/projects/
+          .reply 200, projectsFixture
+
+    describe 'Project created event reaction', ->
+      
+      togglProjectCreation = null
+
+      beforeEach ->
         togglProjectCreation =
           nock /toggl\.com/
             .post /projects/
             .reply 201, (path, container) ->
               data: container.project
 
+      it 'should create Toggl Project on Todoist Project Creation', ->
         await request app
           .post '/todoist-event'
           .send
@@ -63,17 +74,26 @@ describe 'Integration', ->
             project.name.should.be.equal 'Test Project'
             project.wid.should.be.equal 3134975
 
+      it 'should not do anything if there\'s already a project on Toggl', ->
+        await request app
+          .post '/todoist-event'
+          .send
+            event_name: 'project:added'
+            event_data:
+              name: 'An awesome project'
+
+          .then (response) ->
+            togglProjectFetching.isDone().should.be.true
+            togglProjectCreation.isDone().should.be.false
+
+            response.statusCode.should.be.equal 200
+            response.body.should.be.empty
+
     describe 'Project archived event reaction', ->
 
-      togglProjectFetching = null
       togglProjectUpdate = null
 
       beforeEach ->
-        togglProjectFetching =
-          nock /toggl\.com/
-            .get /workspaces\/.+\/projects/
-            .reply 200, projectsFixture
-
         togglProjectUpdate =
           nock /toggl\.com/
             .put /projects/
@@ -115,15 +135,9 @@ describe 'Integration', ->
 
     describe 'Project deleted event reaction', ->
 
-      togglProjectFetching = null
       togglProjectDeletion = null
 
       beforeEach ->
-        togglProjectFetching =
-          nock /toggl\.com/
-            .get /workspaces\/.+\/projects/
-            .reply 200, projectsFixture
-
         togglProjectDeletion =
           nock /toggl\.com/
             .delete /projects/
