@@ -138,6 +138,45 @@ describe 'Toggl', ->
 
         updateProject.should.not.have.been.called
 
+    describe 'Project Restore', ->
+
+      it 'should restore a project', ->
+        findProjectByName = sinon.stub toggl, 'findProjectByName'
+          .returns Promise.resolve(projectFixture.data)
+
+        updateProject = sinon.stub toggl, 'updateProject'
+          .returns Promise.resolve(projectFixture)
+
+        await toggl.onUnarchiveProject name: 'Project C'
+
+        findProjectByName.restore()
+        updateProject.restore()
+
+        findProjectByName.should.have.been.calledOnce
+        findProjectByName.should.have.been.calledWith 'Project C'
+
+        updateProject.should.have.been.calledOnce
+        updateProject.should.have.been.calledWithMatch
+          id: 3134975
+          active: true
+
+      it 'should restore nothing if there\'s no such project', ->
+        findProjectByName = sinon.stub toggl, 'findProjectByName'
+          .returns Promise.resolve(null)
+
+        updateProject = sinon.stub toggl, 'updateProject'
+
+        await toggl.onUnarchiveProject name: 'This Project does not exist'
+
+        findProjectByName.restore()
+        updateProject.restore()
+
+        findProjectByName.should.have.been.calledOnce
+        findProjectByName.should.have.been
+          .calledWith 'This Project does not exist'
+
+        updateProject.should.not.have.been.called
+
     describe 'Project Deletion', ->
 
       deleteProject = null

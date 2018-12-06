@@ -22,7 +22,7 @@ describe 'Integration', ->
       .get /workspaces/
       .reply 200, workspacesFixture
 
-  after nock.restore
+  afterEach nock.cleanAll
 
   it 'should tell on unknown events', ->
     await request app
@@ -40,12 +40,19 @@ describe 'Integration', ->
   describe 'Project related Integration', ->
 
     togglProjectFetching = null
+    togglProjectUpdate = null
 
     beforeEach ->
       togglProjectFetching =
         nock /toggl\.com/
           .get /workspaces\/.+\/projects/
           .reply 200, projectsFixture
+
+      togglProjectUpdate =
+        nock /toggl\.com/
+          .put /projects\/.+/
+          .reply 200, (path, container) ->
+            return data: container.project
 
     describe 'Project created event reaction', ->
       
@@ -90,16 +97,6 @@ describe 'Integration', ->
             response.body.should.be.empty
 
     describe 'Project archived event reaction', ->
-
-      togglProjectUpdate = null
-
-      beforeEach ->
-        togglProjectUpdate =
-          nock /toggl\.com/
-            .put /projects/
-            .reply 200, (path, container) ->
-              container.project.active = false
-              return data: container.project
 
       it 'should archive a Toggl Project when Todoist does', ->
         await request app
@@ -172,3 +169,38 @@ describe 'Integration', ->
 
             response.statusCode.should.be.equal 200
             response.body.should.be.empty
+
+    describe 'Project unarchived event reaction', ->
+
+      it 'should restore a Toggl Project when Todoist does', ->
+        await request app
+          .post '/todoist-event'
+          .send
+            event_name: 'project:unarchived'
+            event_data:
+              name: 'Project C'
+
+          .then (response) ->
+            project = response.body.data
+            togglProjectFetching.isDone().should.be.true
+            togglProjectUpdate.isDone().should.be.true
+
+            response.statusCode.should.be.equal 200
+            project.id.should.be.equal 148091152
+            project.active.should.be.true
+
+      it 'should not do anything if there\'s no such project on Toggl', ->
+        await request app
+          .post '/todoist-event'
+          .send
+            event_name: 'project:unarchived'
+            event_data:
+              name: 'I am no such Project'
+
+          .then (response) ->
+            togglProjectFetching.isDone().should.be.true
+            togglProjectUpdate.isDone().should.be.false
+
+            response.statusCode.should.be.equal 200
+            response.body.should.be.empty
+      
