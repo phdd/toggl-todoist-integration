@@ -25,6 +25,7 @@
     "body-parser": "^1.18.3",
     "crypto": "^1.0.1",
     "express": "^4.16.4",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "todoist-js": "^0.3.1"
   }
 }

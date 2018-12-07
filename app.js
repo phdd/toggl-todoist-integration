@@ -13,7 +13,7 @@ const rawBodySaver = (request, response, buffer) => {
 app.use(bodyParser.json({ verify: rawBodySaver }))
 app.use(middleware.todoistRequestValidation)
 app.use(middleware.todoistDeliveryFilter)
-app.use(middleware.init(toggl))
+app.use(middleware.init(toggl, todoist))
 
 app.post('/todoist-event', (request, response) => {
   todoist

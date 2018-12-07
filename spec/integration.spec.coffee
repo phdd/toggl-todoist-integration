@@ -19,15 +19,23 @@ describe 'Integration', ->
 
   togglWorkspaceFetching = null
   todoistRequestValidation = null
+  secretsFor = null
   
   before ->
     todoistRequestValidation = sinon.stub middleware, 'todoistRequestValidation'
       .callsFake (request, response, next) -> next()
+    
+    secretsFor = sinon.stub middleware, 'secretsFor'
+      .returns
+        todoistApiKey: 'TODOIST_API_KEY'
+        togglApiKey: 'TOGGL_API_KEY'
+        todoistClientSecret: 'TODOIST_CLIENT_SECRET'
 
     app = require '../app'
 
   after ->
     todoistRequestValidation.restore()
+    secretsFor.restore()
 
   beforeEach ->
     togglWorkspaceFetching = nock /toggl\.com/
