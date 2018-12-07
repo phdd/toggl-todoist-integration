@@ -48,11 +48,15 @@ describe 'Middleware', ->
 
     beforeEach ->
       response = status: sinon.stub()
-      request = body: 'the body'
+      request = rawBody: JSON.stringify
+        event_name: 'project:added'
+        event_data:
+          id: 123
+          name: 'Test Project'
 
     it 'should allow signed requests', ->
       request.get = sinon.stub()
-        .returns 'd/nnCzawAZqR3DlviJvKymg5kIfc9j9e+s8UHqpP+2w='
+        .returns 'fiEr99knpRCu9t+ZBXyJAG1jr2q5Qe5pdZ2N/V9oURI='
 
       middleware.todoistRequestValidation request, response, next
 
