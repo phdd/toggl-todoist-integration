@@ -11,7 +11,7 @@ app.use(bodyParser.json())
 
 app.use(middleware.todoistRequestValidation)
 app.use(middleware.todoistDeliveryFilter)
-app.use(middleware.initialize(toggl))
+app.use(middleware.init(toggl))
 
 app.post('/todoist-event', (request, response) => {
   todoist

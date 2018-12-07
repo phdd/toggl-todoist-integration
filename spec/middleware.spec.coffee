@@ -10,13 +10,29 @@ should = chai.should()
 chai.use require('sinon-chai')
 require 'mocha-sinon'
 
-toggl = require '../lib/middleware.js'
+middleware = require '../lib/middleware.js'
+# toggl = require '../lib/toggl.js'
 
 describe 'Middleware', ->
 
   describe 'Initialization', ->
 
-    xit 'should initialize toggl', ->
+    it 'should initialize toggl once', ->
+      next = sinon.stub()
+      toggl = init: sinon.stub().returns Promise.resolve()
+
+      middlewareScretsFor = sinon.stub middleware, 'secretsFor'
+        .returns togglApiKey: 'SECRET_KEY'
+
+      await middleware.init(toggl)(null, null, next)
+      await middleware.init(toggl)(null, null, next)
+
+      middlewareScretsFor.restore()
+
+      next.should.have.been.calledTwice
+
+      toggl.init.should.have.been.calledOnce
+      toggl.init.should.have.been.calledWith 'SECRET_KEY'
 
   describe 'Request Validation', ->
 

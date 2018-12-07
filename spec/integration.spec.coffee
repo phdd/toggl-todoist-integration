@@ -19,13 +19,13 @@ describe 'Integration', ->
   togglWorkspaceFetching = null
 
   beforeEach ->
-    middleware.hasBeenInitialized = false
-
     togglWorkspaceFetching = nock /toggl\.com/
       .get /workspaces/
       .reply 200, workspacesFixture
 
-  afterEach nock.cleanAll
+  afterEach ->
+    middleware.hasBeenInitialized = false
+    nock.cleanAll()
 
   it 'should tell on unknown events', ->
     await request app
