@@ -7,6 +7,7 @@ chai = require 'chai'
 request = require 'supertest'
 
 app = require '../app'
+middleware = require '../lib/middleware'
 workspacesFixture = require './fixtures/toggl-workspaces.json'
 projectsFixture = require './fixtures/toggl-projects.json'
 projectFixture = require './fixtures/toggl-projects.json'
@@ -18,6 +19,8 @@ describe 'Integration', ->
   togglWorkspaceFetching = null
 
   beforeEach ->
+    middleware.hasBeenInitialized = false
+
     togglWorkspaceFetching = nock /toggl\.com/
       .get /workspaces/
       .reply 200, workspacesFixture
@@ -36,8 +39,6 @@ describe 'Integration', ->
         response.statusCode.should.be.equal 200
         response.body.warn
           .should.be.equal 'Event "something:stupid" cannot be handled'
-
-  xit 'should drop events already seen', ->
 
   describe 'Project related Integration', ->
 

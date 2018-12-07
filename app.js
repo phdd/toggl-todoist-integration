@@ -1,36 +1,17 @@
 const app = require('express')()
 const bodyParser = require('body-parser')
 
+const log = require('./lib/log.js')
+const middleware = require('./lib/middleware.js')
 const todoist = require('./lib/todoist.js')
 const toggl = require('./lib/toggl.js')
-const log = require('./lib/log.js')
-
-const secretsFor = (request) => {
-  if (process.env.NODE_ENV !== 'test') {
-    return request.webtaskContext.secrets
-  } else {
-    return {
-      togglApiKey: 'SECRET_KEY'
-    }
-  }
-}
-
-const hasBeenInitialized = false
-
-// TODO: write middleware for X-Todoist-Delivery-ID buffer
-// see https://developer.todoist.com/sync/v7/?shell#request-format
-// see https://stackoverflow.com/a/4852052
-
-app.use((request, response, next) => {
-  if (!hasBeenInitialized) {
-    toggl
-      .init(secretsFor(request).togglApiKey)
-      .then(next)
-  }
-})
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+
+app.use(middleware.todoistRequestValidation)
+app.use(middleware.todoistDeliveryFilter)
+app.use(middleware.initialize(toggl))
 
 app.post('/todoist-event', (request, response) => {
   todoist
