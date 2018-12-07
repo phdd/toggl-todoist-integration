@@ -33,18 +33,18 @@ describe 'Middleware', ->
 
     it 'should initialize Toggl and Todoist once', ->
       toggl = init: sinon.stub().returns Promise.resolve()
-      todoist = init: sinon.stub().returns Promise.resolve()
+      rules = init: sinon.stub().returns Promise.resolve()
 
-      await middleware.init(toggl, todoist)(null, null, next)
-      await middleware.init(toggl, todoist)(null, null, next)
+      await middleware.init(toggl, rules)(null, null, next)
+      await middleware.init(toggl, rules)(null, null, next)
 
       next.should.have.been.calledTwice
 
       toggl.init.should.have.been.calledOnce
       toggl.init.should.have.been.calledWith 'TOGGL_API_KEY'
 
-      todoist.init.should.have.been.calledOnce
-      todoist.init.should.have.been.calledWith 'TODOIST_API_KEY'
+      rules.init.should.have.been.calledOnce
+      rules.init.should.have.been.calledWith toggl
 
   describe 'Request Validation', ->
 

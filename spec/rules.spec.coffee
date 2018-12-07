@@ -13,27 +13,28 @@ chai.use require('sinon-chai')
 
 require 'mocha-sinon'
 
-todoist = require('../lib/todoist.js')
-toggl = require '../lib/toggl.js'
+rules = require '../lib/rules'
+toggl = require '../lib/toggl'
 
 projectFixture = require './fixtures/toggl-project.json'
 
-describe 'Todoist', ->
+describe 'Rules', ->
 
   describe 'Event Forwarding', ->
     it 'should tell on invalid events', ->
-      todoist.forward {}, null
+      rules.forward {}, null
         .should.be.rejectedWith 'no valid event_name attribute defined'
 
     it 'should tell on unknown events', ->
-      todoist.forward { event_name: 'do:this' }, null
+      rules.forward { event_name: 'do:this' }, null
         .should.be.rejectedWith 'Event "do:this" cannot be handled'
 
-  describe 'Toggl Reaction on Project Events', ->
+  describe 'Reaction on Project Events', ->
 
     beforeEach ->
       toggl.api = request.defaults()
       toggl.workspaceId = 3134975
+      rules.init toggl
 
     describe 'project:added', ->
 
@@ -44,7 +45,7 @@ describe 'Todoist', ->
         createProject = sinon.stub toggl, 'createProject'
           .returns Promise.resolve(projectFixture)
 
-        await todoist.project_added id: 123, name: 'Test Project', toggl
+        await rules.project_added id: 123, name: 'Test Project'
         
         findProjectByName.restore()
         createProject.restore()
@@ -61,7 +62,7 @@ describe 'Todoist', ->
 
         createProject = sinon.stub toggl, 'createProject'
 
-        await todoist.project_added id: 123, name: 'An awesome project', toggl
+        await rules.project_added id: 123, name: 'An awesome project'
 
         findProjectByName.restore()
         createProject.restore()
@@ -80,7 +81,7 @@ describe 'Todoist', ->
         updateProject = sinon.stub toggl, 'updateProject'
           .returns Promise.resolve(projectFixture)
 
-        await todoist.project_archived id: 123, name: 'Project C', toggl
+        await rules.project_archived id: 123, name: 'Project C'
 
         findProjectByName.restore()
         updateProject.restore()
@@ -99,8 +100,8 @@ describe 'Todoist', ->
 
         updateProject = sinon.stub toggl, 'updateProject'
 
-        await todoist.project_archived
-          id: 123, name: 'This Project does not exist', toggl
+        await rules.project_archived
+          id: 123, name: 'This Project does not exist'
 
         findProjectByName.restore()
         updateProject.restore()
@@ -120,7 +121,7 @@ describe 'Todoist', ->
         updateProject = sinon.stub toggl, 'updateProject'
           .returns Promise.resolve(projectFixture)
 
-        await todoist.project_unarchived id: 123, name: 'Project C', toggl
+        await rules.project_unarchived id: 123, name: 'Project C'
 
         findProjectByName.restore()
         updateProject.restore()
@@ -140,8 +141,8 @@ describe 'Todoist', ->
         updateProject = sinon.stub toggl, 'updateProject'
         createProject = sinon.stub toggl, 'createProject'
 
-        await todoist.project_unarchived
-          id: 123, name: 'This Project does not exist', toggl
+        await rules.project_unarchived
+          id: 123, name: 'This Project does not exist'
 
         findProjectByName.restore()
         updateProject.restore()
@@ -172,7 +173,7 @@ describe 'Todoist', ->
         findProjectByName = sinon.stub toggl, 'findProjectByName'
           .returns Promise.resolve(projectFixture.data)
 
-        await todoist.project_deleted id: 123, name: 'Project C', toggl
+        await rules.project_deleted id: 123, name: 'Project C'
 
         findProjectByName.restore()
 
@@ -188,7 +189,7 @@ describe 'Todoist', ->
         findProjectByName = sinon.stub toggl, 'findProjectByName'
           .returns Promise.resolve(null)
 
-        await todoist.project_deleted project, toggl
+        await rules.project_deleted project
 
         findProjectByName.restore()
 
@@ -198,4 +199,4 @@ describe 'Todoist', ->
         findProjectByName.should.have.been
           .calledWith 'This Project does not exist (123)'
 
-    xdescribe 'project:update', ->
+    xit 'project:update', ->

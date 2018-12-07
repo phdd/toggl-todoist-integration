@@ -1,10 +1,10 @@
 const app = require('express')()
 const bodyParser = require('body-parser')
 
-const log = require('./lib/log.js')
-const middleware = require('./lib/middleware.js')
-const todoist = require('./lib/todoist.js')
-const toggl = require('./lib/toggl.js')
+const log = require('./lib/log')
+const middleware = require('./lib/middleware')
+const rules = require('./lib/rules')
+const toggl = require('./lib/toggl')
 
 const rawBodySaver = (request, response, buffer) => {
   request.rawBody = buffer.toString()
@@ -13,11 +13,11 @@ const rawBodySaver = (request, response, buffer) => {
 app.use(bodyParser.json({ verify: rawBodySaver }))
 app.use(middleware.todoistRequestValidation)
 app.use(middleware.todoistDeliveryFilter)
-app.use(middleware.init(toggl, todoist))
+app.use(middleware.init(toggl, rules))
 
 app.post('/todoist-event', (request, response) => {
-  todoist
-    .forward(request.body, toggl)
+  rules
+    .forward(request.body)
     .then((togglProject) => {
       response.status(200).send(togglProject)
     })
