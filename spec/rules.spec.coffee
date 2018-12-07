@@ -199,4 +199,6 @@ describe 'Rules', ->
         findProjectByName.should.have.been
           .calledWith 'This Project does not exist (123)'
 
-    xit 'project:update', ->
+    describe 'project:update', ->
+
+      xit 'should do something', ->
