@@ -5,8 +5,9 @@ process.env.NODE_ENV = 'test'
 nock = require 'nock'
 chai = require 'chai'
 request = require 'supertest'
+sinon = require 'sinon'
 
-app = require '../app'
+app = null
 middleware = require '../lib/middleware'
 workspacesFixture = require './fixtures/toggl-workspaces.json'
 projectsFixture = require './fixtures/toggl-projects.json'
@@ -17,6 +18,16 @@ chai.should()
 describe 'Integration', ->
 
   togglWorkspaceFetching = null
+  todoistRequestValidation = null
+  
+  before ->
+    todoistRequestValidation = sinon.stub middleware, 'todoistRequestValidation'
+      .callsFake (request, response, next) -> next()
+
+    app = require '../app'
+
+  after ->
+    todoistRequestValidation.restore()
 
   beforeEach ->
     togglWorkspaceFetching = nock /toggl\.com/

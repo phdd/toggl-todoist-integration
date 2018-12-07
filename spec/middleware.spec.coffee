@@ -11,23 +11,30 @@ chai.use require('sinon-chai')
 require 'mocha-sinon'
 
 middleware = require '../lib/middleware.js'
-# toggl = require '../lib/toggl.js'
 
 describe 'Middleware', ->
+
+  secretsFor = null
+  next = null
+
+  beforeEach ->
+    next = sinon.stub()
+
+    secretsFor = sinon.stub middleware, 'secretsFor'
+      .returns
+        togglApiKey: 'SECRET_KEY'
+        todoistClientSecret: 'TODOIST_CLIENT_SECRET'
+
+  afterEach ->
+    secretsFor.restore()
 
   describe 'Initialization', ->
 
     it 'should initialize toggl once', ->
-      next = sinon.stub()
       toggl = init: sinon.stub().returns Promise.resolve()
 
-      middlewareScretsFor = sinon.stub middleware, 'secretsFor'
-        .returns togglApiKey: 'SECRET_KEY'
-
       await middleware.init(toggl)(null, null, next)
       await middleware.init(toggl)(null, null, next)
-
-      middlewareScretsFor.restore()
 
       next.should.have.been.calledTwice
 
@@ -36,9 +43,41 @@ describe 'Middleware', ->
 
   describe 'Request Validation', ->
 
-    xit 'should allow signed requests', ->
+    request = null
+    response = null
 
-    xit 'should ignore unsigned requests', ->
+    beforeEach ->
+      response = status: sinon.stub()
+      request = body: 'the body'
+
+    it 'should allow signed requests', ->
+      request.get = sinon.stub()
+        .returns 'd/nnCzawAZqR3DlviJvKymg5kIfc9j9e+s8UHqpP+2w='
+
+      middleware.todoistRequestValidation request, response, next
+
+      next.should.have.been.calledOnce
+
+      request.get.should.have.been.calledOnce
+      request.get.should.have.been.calledWith 'X-Todoist-Hmac-SHA256'
+
+    it 'should ignore unsigned requests', ->
+      request.get = sinon.stub().returns undefined
+
+      middleware.todoistRequestValidation request, response, next
+
+      response.status.should.have.been.calledOnce
+      response.status.should.have.been.calledWith 403
+
+    it 'should ignore invalid request signatures', ->
+      request.get = sinon.stub().returns '0815'
+
+      middleware.todoistRequestValidation request, response, next
+
+      next.should.not.have.been.called
+
+      response.status.should.have.been.calledOnce
+      response.status.should.have.been.calledWith 403
 
   describe 'Todoist Event Filter', ->
 

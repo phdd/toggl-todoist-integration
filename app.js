@@ -6,12 +6,12 @@ const middleware = require('./lib/middleware.js')
 const todoist = require('./lib/todoist.js')
 const toggl = require('./lib/toggl.js')
 
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
-
 app.use(middleware.todoistRequestValidation)
 app.use(middleware.todoistDeliveryFilter)
 app.use(middleware.init(toggl))
+
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 
 app.post('/todoist-event', (request, response) => {
   todoist
