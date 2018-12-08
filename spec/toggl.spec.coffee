@@ -2,7 +2,7 @@
 
 process.env.NODE_ENV = 'test'
 
-request = require 'request'
+request = require 'request-promise-native'
 chai = require 'chai'
 sinon = require 'sinon'
 
@@ -34,7 +34,7 @@ describe 'Toggl', ->
   describe 'Initialization', ->
 
     it 'should setup the request defaults', ->
-      request.get.returns workspaces
+      request.get.returns Promise.resolve(workspaces)
 
       toggl.init 'SECRET_KEY'
 
@@ -46,8 +46,7 @@ describe 'Toggl', ->
           Authorization: 'Basic U0VDUkVUX0tFWTphcGlfdG9rZW4='
 
     it 'should use the first workspace available', ->
-      request.get.callsFake (path, callback) ->
-        callback null, null, workspaces
+      request.get.returns Promise.resolve(workspaces)
 
       await toggl.init 'SECRET_KEY'
 
@@ -62,8 +61,7 @@ describe 'Toggl', ->
       toggl.workspaceId = 3134975
 
     it 'should be able to create projects', ->
-      request.post.callsFake (path, callback) ->
-        callback null, null, projectFixture
+      request.post.returns Promise.resolve(projectFixture)
 
       project = await toggl.createProject
         name: 'Test Project'
@@ -77,8 +75,7 @@ describe 'Toggl', ->
             name: 'Test Project'
 
     it 'should be able to get all workspace projects', ->
-      request.get.callsFake (path, callback) ->
-        callback null, null, projectsFixture
+      request.get.returns Promise.resolve(projectsFixture)
 
       projects = await toggl.fetchProjects()
 
@@ -89,8 +86,7 @@ describe 'Toggl', ->
       projects.should.be.equal projectsFixture
       
     it 'should be able to update projects', ->
-      request.put.callsFake (path, callback) ->
-        callback null, null, projectFixture
+      request.put.returns Promise.resolve(projectFixture)
 
       projects = await toggl.updateProject
         id: 3134975
@@ -104,11 +100,8 @@ describe 'Toggl', ->
             active: false
 
     it 'should be able to delete projects', ->
-      request.get.callsFake (path, callback) ->
-        callback null, null, projectsFixture
-
-      request.del.callsFake (path, callback) ->
-        callback null, null, null
+      request.get.returns Promise.resolve(projectsFixture)
+      request.del.returns Promise.resolve(null)
 
       await toggl.deleteProject
         id: '148091152'
