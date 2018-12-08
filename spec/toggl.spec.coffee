@@ -2,34 +2,34 @@
 
 process.env.NODE_ENV = 'test'
 
-request = require 'request-promise-native'
 chai = require 'chai'
 sinon = require 'sinon'
+stubbed = require 'proxyquire'
+
+chai.use require 'sinon-chai'
 
 should = chai.should()
-chai.use require('sinon-chai')
-require 'mocha-sinon'
 
-toggl = require '../lib/toggl'
 workspaces = require './fixtures/toggl-workspaces.json'
 projectFixture = require './fixtures/toggl-project.json'
 projectsFixture = require './fixtures/toggl-projects.json'
 
 describe 'Toggl', ->
 
-  beforeEach ->
-    sinon.stub request, 'get'
-    sinon.stub request, 'post'
-    sinon.stub request, 'put'
-    sinon.stub request, 'del'
-    sinon.spy request, 'defaults'
+  toggl = null
+  request = null
 
-  afterEach ->
-    request.get.restore()
-    request.post.restore()
-    request.put.restore()
-    request.del.restore()
-    request.defaults.restore()
+  beforeEach ->
+    request =
+      get: sinon.stub()
+      post: sinon.stub()
+      put: sinon.stub()
+      del: sinon.stub()
+      defaults: sinon.stub()
+        .callsFake () -> request
+
+    toggl = stubbed '../lib/toggl',
+      'request-promise-native': request
 
   describe 'Initialization', ->
 
@@ -51,7 +51,7 @@ describe 'Toggl', ->
       await toggl.init 'SECRET_KEY'
 
       request.get.should.have.been.calledOnce
-      request.get.should.have.been.calledWithMatch uri: '/workspaces'
+      request.get.should.have.been.calledWithMatch '/workspaces'
       toggl.workspaceId.should.be.equal 3134975
 
   describe 'API Methods', ->
@@ -80,8 +80,8 @@ describe 'Toggl', ->
       projects = await toggl.fetchProjects()
 
       request.get.should.have.been.calledOnce
-      request.get.should.have.been.calledWithMatch
-        uri: '/workspaces/3134975/projects?active=both'
+      request.get.should.have.been
+        .calledWith '/workspaces/3134975/projects?active=both'
 
       projects.should.be.equal projectsFixture
       
@@ -122,7 +122,7 @@ describe 'Toggl', ->
         fetchProjects.restore()
 
       it 'should be able to find projects by name', ->
-        await toggl.findProjectByName 'Project C (123)'
+        await toggl.findProjectByName 'Project C (129)'
           .then (project) ->
             project.id.should.be.equal 148091152
 
@@ -134,3 +134,14 @@ describe 'Toggl', ->
             should.not.exist project
 
         fetchProjects.should.have.been.calledOnce
+
+    describe 'Helper Methods', ->
+
+      it 'should be able to build a report frontend link', ->
+        link = toggl.buildProjectReportLinkFor
+          id: 123
+          wid: 456
+
+        link.should.be.equal 'https://www.toggl.com/app/' +
+                             'reports/summary/456/' +
+                             'period/thisWeek/projects/123'

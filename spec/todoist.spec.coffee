@@ -2,34 +2,32 @@
 
 process.env.NODE_ENV = 'test'
 
-request = require 'request'
-chai = require('chai')
-sinon = require('sinon')
+chai = require 'chai'
+sinon = require 'sinon'
+stubbed = require 'proxyquire'
 
 chai.should()
 
-chai.use require('chai-as-promised')
-chai.use require('sinon-chai')
+chai.use require 'sinon-chai'
 
-require 'mocha-sinon'
-
-todoist = require '../lib/todoist'
+taskFixture = require './fixtures/todoist-task'
 
 describe 'Todoist', ->
 
-  beforeEach ->
-    sinon.stub request, 'get'
-    sinon.stub request, 'post'
-    sinon.stub request, 'put'
-    sinon.stub request, 'del'
-    sinon.spy request, 'defaults'
+  todoist = null
+  request = null
 
-  afterEach ->
-    request.get.restore()
-    request.post.restore()
-    request.put.restore()
-    request.del.restore()
-    request.defaults.restore()
+  beforeEach ->
+    request =
+      get: sinon.stub()
+      post: sinon.stub()
+      put: sinon.stub()
+      del: sinon.stub()
+      defaults: sinon.stub()
+        .callsFake () -> request
+
+    todoist = stubbed '../lib/todoist',
+      'request-promise-native': request
 
   describe 'Initialization', ->
 
@@ -45,4 +43,17 @@ describe 'Todoist', ->
 
   describe 'API Methods', ->
 
-    xit 'should do something', ->
+    beforeEach ->
+      todoist.api = request.defaults()
+
+    it 'should be able to create tasks', ->
+      request.post.returns Promise.resolve(taskFixture)
+
+      task = await todoist.createTask
+        name: 'Test Task'
+
+      request.post.should.have.been.calledOnce
+      request.post.should.have.been.calledWithMatch
+        uri: '/tasks'
+        body:
+          name: 'Test Task'

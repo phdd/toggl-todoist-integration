@@ -28,12 +28,6 @@ app.post('/todoist-event', (request, response) => {
         response.status(200).send({
           warn: error.message
         })
-      } else {
-        log.warn('Unknown Error',
-          { message: error.message, body: request.body })
-        response.status(400).send({
-          error: error.message
-        })
       }
     })
 })

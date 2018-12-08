@@ -2,42 +2,59 @@
 
 process.env.NODE_ENV = 'test'
 
-request = require 'request'
 chai = require 'chai'
 sinon = require 'sinon'
+stubbed = require 'proxyquire'
 
 should = chai.should()
-chai.use require('sinon-chai')
-require 'mocha-sinon'
 
-middleware = require '../lib/middleware.js'
+chai.use require 'sinon-chai'
 
 describe 'Middleware', ->
 
-  secretsFor = null
+  middleware = null
   next = null
+
+  mockSecrets =
+    todoistApiKey: 'TODOIST_API_KEY'
+    togglApiKey: 'TOGGL_API_KEY'
+    todoistClientSecret: 'TODOIST_CLIENT_SECRET'
 
   beforeEach ->
     next = sinon.stub()
 
-    secretsFor = sinon.stub middleware, 'secretsFor'
-      .returns
-        todoistApiKey: 'TODOIST_API_KEY'
-        togglApiKey: 'TOGGL_API_KEY'
-        todoistClientSecret: 'TODOIST_CLIENT_SECRET'
+    middleware = require '../lib/middleware.js',
+      './log':
+        info: ->
+        warn: ->
+        error: ->
 
-  afterEach ->
-    secretsFor.restore()
+  it 'should depend on secrets from Webtask.io', ->
+    (() -> middleware.secretsFor {})
+      .should.throw Error, 'Webtask.io Secrets Missing'
 
   describe 'Initialization', ->
+
+    secretsFor = null
+    next = null
+
+    beforeEach ->
+      secretsFor = sinon.stub middleware, 'secretsFor'
+        .returns mockSecrets
+
+    afterEach ->
+      secretsFor.restore()
 
     it 'should initialize Toggl, Todoist and Rules once', ->
       toggl = init: sinon.stub().returns Promise.resolve()
       todoist = init: sinon.stub().returns Promise.resolve()
       rules = init: sinon.stub().returns Promise.resolve()
 
-      await middleware.init(toggl, todoist, rules)(null, null, next)
-      await middleware.init(toggl, todoist, rules)(null, null, next)
+      firstInit = middleware.init(toggl, todoist, rules)
+      secondInit = middleware.init(toggl, todoist, rules)
+
+      await await firstInit(null, null, next)
+      await await secondInit(null, null, next)
 
       next.should.have.been.calledTwice
 
@@ -57,11 +74,13 @@ describe 'Middleware', ->
 
     beforeEach ->
       response = status: sinon.stub()
-      request = rawBody: JSON.stringify
-        event_name: 'project:added'
-        event_data:
-          id: 123
-          name: 'Test Project'
+      request =
+        webtaskContext: secrets: mockSecrets
+        rawBody: JSON.stringify
+          event_name: 'project:added'
+          event_data:
+            id: 123
+            name: 'Test Project'
 
     it 'should allow signed requests', ->
       request.get = sinon.stub()
