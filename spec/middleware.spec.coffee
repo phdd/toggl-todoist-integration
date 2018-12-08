@@ -37,9 +37,11 @@ describe 'Middleware', ->
   it 'should complain about missing secrets', ->
     secretsFor = sinon.stub middleware, 'secretsFor'
       .returns todoistApiKey: 12, togglApiKey: 27
-    
+
     (() -> middleware.init()())
       .should.throw Error, 'Secret "todoistClientSecret" missing'
+
+    secretsFor.restore()
 
   describe 'Initialization', ->
 
