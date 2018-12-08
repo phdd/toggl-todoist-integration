@@ -303,4 +303,4 @@ describe 'Integration', ->
 
   describe 'Task related Integration', ->
 
-    xit 'should create non-existing Toggle project on task update', ->
+    xit 'should create non-existing Toggle project on task creation', ->

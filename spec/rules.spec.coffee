@@ -231,6 +231,39 @@ describe 'Rules', ->
           .calledWith { id: 113, name: 'A project' },
                       { name: 'A project (113)' }
 
+    describe 'item:added', ->
+
+      xit 'should create a project', ->
+        toggl.findProjectByName = sinon.stub()
+          .returns Promise.resolve(null)
+
+        toggl.createProject = sinon.stub()
+          .returns Promise.resolve(projectFixture.data)
+
+        await rules.project_added id: 123, name: 'Test Project'
+
+        toggl.findProjectByName.should.have.been.calledOnce
+        toggl.findProjectByName.should.have.been
+          .calledWith 'Test Project (123)'
+
+        toggl.createProject.should.have.been.calledOnce
+        toggl.createProject.should.have.been
+          .calledWith name: 'Test Project (123)'
+
+      xit 'should not create the project if it exists already', ->
+        toggl.findProjectByName = sinon.stub()
+          .returns Promise.resolve(projectFixture.data)
+
+        toggl.createProject = sinon.stub()
+
+        await rules.project_added id: 123, name: 'An awesome project'
+
+        toggl.findProjectByName.should.have.been.calledOnce
+        toggl.findProjectByName.should.have.been
+          .calledWith 'An awesome project (123)'
+
+        toggl.createProject.should.not.have.been.called
+
     it 'should create a corresponding ' +
         'todoist task if the project has been created', ->
       todoistTaskDto =
