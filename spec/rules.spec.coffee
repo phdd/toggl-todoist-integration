@@ -234,7 +234,7 @@ describe 'Rules', ->
     it 'should create a corresponding ' +
         'todoist task if the project has been created', ->
       todoistTaskDto =
-        content: '[:alarm_clock: Timesheet](report-link)'
+        content: '* [:alarm_clock: Timesheet](report-link)'
         project_id: 1234
 
       toggl.createProject = sinon.stub()

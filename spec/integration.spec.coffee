@@ -162,7 +162,7 @@ describe 'Integration', ->
             project.wid.should.be.equal 3134975
 
             task.project_id.should.be.equal 468498431
-            task.content.should.be.equal '[:alarm_clock: Timesheet]' +
+            task.content.should.be.equal '* [:alarm_clock: Timesheet]' +
               '(https://www.toggl.com/app/reports/summary/3134975/' +
               'period/thisWeek/projects/7673435)'
 
