@@ -24,6 +24,7 @@ describe 'Middleware', ->
     next = sinon.stub()
 
     middleware = require '../lib/middleware.js',
+      'assert': require 'assert'
       './log':
         info: ->
         warn: ->
@@ -32,6 +33,13 @@ describe 'Middleware', ->
   it 'should depend on secrets from Webtask.io', ->
     (() -> middleware.secretsFor {})
       .should.throw Error, 'Webtask.io Secrets Missing'
+
+  it 'should complain about missing secrets', ->
+    secretsFor = sinon.stub middleware, 'secretsFor'
+      .returns todoistApiKey: 12, togglApiKey: 27
+    
+    (() -> middleware.init()())
+      .should.throw Error, 'Secret "todoistClientSecret" missing'
 
   describe 'Initialization', ->
 
