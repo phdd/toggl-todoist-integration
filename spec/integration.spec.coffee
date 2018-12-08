@@ -235,3 +235,7 @@ describe 'Integration', ->
             response.statusCode.should.be.equal 200
             project.name.should.be.equal 'I am no such Project (123)'
             project.wid.should.be.equal 3134975
+
+  describe 'Task related Integration', ->
+
+    xit 'should create non-existing Toggle project on task update', ->
