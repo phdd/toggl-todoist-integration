@@ -10,7 +10,7 @@ should = chai.should()
 chai.use require('sinon-chai')
 require 'mocha-sinon'
 
-toggl = require '../lib/toggl.js'
+toggl = require '../lib/toggl'
 workspaces = require './fixtures/toggl-workspaces.json'
 projectFixture = require './fixtures/toggl-project.json'
 projectsFixture = require './fixtures/toggl-projects.json'

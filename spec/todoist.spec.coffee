@@ -13,16 +13,35 @@ chai.use require('sinon-chai')
 
 require 'mocha-sinon'
 
-rules = require '../lib/rules'
-toggl = require '../lib/toggl'
-
-projectFixture = require './fixtures/toggl-project.json'
+todoist = require '../lib/todoist'
 
 describe 'Todoist', ->
 
+  beforeEach ->
+    sinon.stub request, 'get'
+    sinon.stub request, 'post'
+    sinon.stub request, 'put'
+    sinon.stub request, 'del'
+    sinon.spy request, 'defaults'
+
+  afterEach ->
+    request.get.restore()
+    request.post.restore()
+    request.put.restore()
+    request.del.restore()
+    request.defaults.restore()
+
   describe 'Initialization', ->
-    
-    xit 'should do something', ->
+
+    it 'should setup the request defaults', ->
+      await todoist.init 'TODOIST_API_KEY'
+
+      request.defaults.should.have.been.calledOnce
+      request.defaults.should.have.been.calledWith
+        json: true
+        baseUrl: 'https://beta.todoist.com/API/v8'
+        headers:
+          Authorization: 'Bearer TODOIST_API_KEY'
 
   describe 'API Methods', ->
 

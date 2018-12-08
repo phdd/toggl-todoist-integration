@@ -5,6 +5,7 @@ const log = require('./lib/log')
 const middleware = require('./lib/middleware')
 const rules = require('./lib/rules')
 const toggl = require('./lib/toggl')
+const todoist = require('./lib/todoist')
 
 const rawBodySaver = (request, response, buffer) => {
   request.rawBody = buffer.toString()
@@ -13,7 +14,7 @@ const rawBodySaver = (request, response, buffer) => {
 app.use(bodyParser.json({ verify: rawBodySaver }))
 app.use(middleware.todoistRequestValidation)
 app.use(middleware.todoistDeliveryFilter)
-app.use(middleware.init(toggl, rules))
+app.use(middleware.init(toggl, todoist, rules))
 
 app.post('/todoist-event', (request, response) => {
   rules
