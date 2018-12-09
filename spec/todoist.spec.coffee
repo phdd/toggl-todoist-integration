@@ -32,14 +32,14 @@ describe 'Todoist', ->
   describe 'Initialization', ->
 
     it 'should setup the request defaults', ->
-      await todoist.init 'TODOIST_API_KEY'
+      await todoist.init 'TODOIST_API_TOKEN'
 
       request.defaults.should.have.been.calledOnce
       request.defaults.should.have.been.calledWith
         json: true
         baseUrl: 'https://beta.todoist.com/API/v8'
         headers:
-          Authorization: 'Bearer TODOIST_API_KEY'
+          Authorization: 'Bearer TODOIST_API_TOKEN'
 
   describe 'API Methods', ->
 

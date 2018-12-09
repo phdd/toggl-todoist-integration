@@ -34,8 +34,8 @@ describe 'Integration', ->
     
     secretsFor = sinon.stub middleware, 'secretsFor'
       .returns
-        todoistApiKey: 'TODOIST_API_KEY'
-        togglApiKey: 'TOGGL_API_KEY'
+        todoistApiToken: 'TODOIST_API_TOKEN'
+        togglApiToken: 'TOGGL_API_TOKEN'
         todoistClientSecret: 'TODOIST_CLIENT_SECRET'
 
     app = require '../app'
