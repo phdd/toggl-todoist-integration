@@ -16,8 +16,8 @@ describe 'Middleware', ->
   next = null
 
   mockSecrets =
-    todoistApiKey: 'TODOIST_API_KEY'
-    togglApiKey: 'TOGGL_API_KEY'
+    todoistApiToken: 'TODOIST_API_TOKEN'
+    togglApiToken: 'TOGGL_API_TOKEN'
     todoistClientSecret: 'TODOIST_CLIENT_SECRET'
 
   beforeEach ->
@@ -36,7 +36,7 @@ describe 'Middleware', ->
 
   it 'should complain about missing secrets', ->
     secretsFor = sinon.stub middleware, 'secretsFor'
-      .returns todoistApiKey: 12, togglApiKey: 27
+      .returns todoistApiToken: 12, togglApiToken: 27
 
     (() -> middleware.init()())
       .should.throw Error, 'Secret "todoistClientSecret" missing'
@@ -69,10 +69,10 @@ describe 'Middleware', ->
       next.should.have.been.calledTwice
 
       toggl.init.should.have.been.calledOnce
-      toggl.init.should.have.been.calledWith 'TOGGL_API_KEY'
+      toggl.init.should.have.been.calledWith 'TOGGL_API_TOKEN'
 
       todoist.init.should.have.been.calledOnce
-      todoist.init.should.have.been.calledWith 'TODOIST_API_KEY'
+      todoist.init.should.have.been.calledWith 'TODOIST_API_TOKEN'
 
       rules.init.should.have.been.calledOnce
       rules.init.should.have.been.calledWith toggl
