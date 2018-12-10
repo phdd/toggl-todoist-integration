@@ -10,7 +10,7 @@ chai.should()
 
 chai.use require 'sinon-chai'
 
-taskFixture = require './fixtures/todoist-task'
+commentsFixture = require './fixtures/todoist-project-comments'
 
 describe 'Todoist', ->
 
@@ -46,14 +46,27 @@ describe 'Todoist', ->
     beforeEach ->
       todoist.api = request.defaults()
 
-    it 'should be able to create tasks', ->
-      request.post.returns Promise.resolve(taskFixture)
+    it 'should be able to create comments', ->
+      request.post.returns Promise.resolve
+        .callsFake (request) -> request.body
 
-      task = await todoist.createTask
-        name: 'Test Task'
+      await todoist.createComment
+        project_id: 354
+        name: 'Test Comment'
 
       request.post.should.have.been.calledOnce
       request.post.should.have.been.calledWithMatch
-        uri: '/tasks'
+        uri: '/comments'
         body:
-          name: 'Test Task'
+          project_id: 354
+          name: 'Test Comment'
+
+    it 'should fetch project comments', ->
+      request.get.returns Promise.resolve(commentsFixture)
+
+      comments = await todoist.fetchProjectComments 129
+      
+      request.get.should.have.been.calledOnce
+      request.get.should.have.been.calledWith '/comments?project_id=129'
+
+      comments.should.be.equal commentsFixture

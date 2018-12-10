@@ -122,7 +122,7 @@ describe 'Toggl', ->
         fetchProjects.restore()
 
       it 'should be able to find projects by name', ->
-        await toggl.findProjectByName 'Project C (129)'
+        await toggl.findProjectByName 'Project C'
           .then (project) ->
             project.id.should.be.equal 148091152
 
@@ -145,3 +145,19 @@ describe 'Toggl', ->
         link.should.be.equal 'https://www.toggl.com/app/' +
                              'reports/summary/456/' +
                              'period/thisWeek/projects/123'
+
+      it 'should be able to extract a project ids from report links', ->
+        link = 'https://www.toggl.com/app/reports/summary/3134975/' +
+               'period/thisWeek/projects/148091152'
+
+        projectId = toggl.projectIdFrom link
+
+        projectId.should.be.equal 148091152
+
+      it 'should not be able to extract a project ids' +
+         'from invalid report links', ->
+        link = 'https://google.de'
+
+        projectId = toggl.projectIdFrom link
+
+        chai.expect(projectId).to.be.equal null
