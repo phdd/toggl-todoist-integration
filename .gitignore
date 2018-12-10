@@ -1,4 +1,4 @@
 secret.properties
-node_modules/
+node_modules
 coverage/*
-.nyc_output/
+.nyc_output
