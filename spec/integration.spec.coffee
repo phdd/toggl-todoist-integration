@@ -7,10 +7,10 @@ chai = require 'chai'
 request = require 'supertest'
 sinon = require 'sinon'
 
-workspacesFixture = require './fixtures/toggl-workspaces.json'
-projectsFixture = require './fixtures/toggl-projects.json'
-projectFixture = require './fixtures/toggl-projects.json'
-taskFixture = require './fixtures/todoist-task.json'
+workspacesFixture = require './fixtures/toggl-workspaces'
+projectsFixture = require './fixtures/toggl-projects'
+projectFixture = require './fixtures/toggl-projects'
+commentsFixture = require './fixtures/todoist-project-comments'
 
 chai.should()
 
@@ -72,6 +72,9 @@ describe 'Integration', ->
     togglProjectUpdate = null
     togglProjectCreation = null
     todoistTaskCreation = null
+    todoistCommentFetching = null
+    todoistEmptyCommentFetching = null
+    todoistCommentCreation = null
 
     beforeEach ->
       togglProjectFetching =
@@ -97,6 +100,21 @@ describe 'Integration', ->
           .post /tasks/
           .reply 201, (path, task) -> task
 
+      todoistCommentCreation =
+        nock /todoist\.com/
+          .post /comments/
+          .reply 201, (path, comment) -> comment
+
+      todoistCommentFetching =
+        nock /todoist\.com/
+          .get /comments\?project_id=129/
+          .reply 200, commentsFixture
+
+      todoistEmptyCommentFetching =
+        nock /todoist\.com/
+          .get /comments\?project_id=5468/
+          .reply 200, []
+
     describe 'Project updated event reaction', ->
 
       it 'should update existing Toggle project', ->
@@ -106,16 +124,16 @@ describe 'Integration', ->
             event_name: 'project:updated'
             event_data:
               id: 129
-              name: 'Project C is no more'
+              name: 'Project C is even better'
 
           .then (response) ->
             project = response.body
-            togglProjectFetching.isDone().should.be.true
+            todoistCommentFetching.isDone().should.be.true
             togglProjectUpdate.isDone().should.be.true
 
             response.statusCode.should.be.equal 200
             project.id.should.be.equal 148091152
-            project.name.should.be.equal 'Project C is no more (129)'
+            project.name.should.be.equal 'Project C is even better'
 
       it 'should create non-existing Toggle project', ->
         await request app
@@ -127,14 +145,14 @@ describe 'Integration', ->
               name: 'I am no such Project'
 
           .then (response) ->
-            togglProjectFetching.isDone().should.be.true
+            todoistEmptyCommentFetching.isDone().should.be.true
             togglProjectUpdate.isDone().should.be.false
             togglProjectCreation.isDone().should.be.true
 
             response.statusCode.should.be.equal 200
 
             response.body.togglProject.name
-              .should.be.equal 'I am no such Project (5468)'
+              .should.be.equal 'I am no such Project'
 
             response.body.togglProject.wid.should.be.equal 3134975
 
@@ -151,18 +169,18 @@ describe 'Integration', ->
 
           .then (response) ->
             project = response.body.togglProject
-            task = response.body.todoistTask
+            comment = response.body.todoistComment
 
             togglProjectCreation.isDone().should.be.true
-            todoistTaskCreation.isDone().should.be.true
+            todoistCommentCreation.isDone().should.be.true
 
             response.statusCode.should.be.equal 200
 
-            project.name.should.be.equal 'Test Project (468498431)'
+            project.name.should.be.equal 'Test Project'
             project.wid.should.be.equal 3134975
 
-            task.project_id.should.be.equal 468498431
-            task.content.should.be.equal '* [:alarm_clock: Timesheet]' +
+            comment.project_id.should.be.equal 468498431
+            comment.content.should.be.equal ':alarm_clock: [Toggl Timesheet]' +
               '(https://www.toggl.com/app/reports/summary/3134975/' +
               'period/thisWeek/projects/7673435)'
 
@@ -273,8 +291,9 @@ describe 'Integration', ->
 
           .then (response) ->
             project = response.body
-            togglProjectFetching.isDone().should.be.true
+            todoistCommentFetching.isDone().should.be.true
             togglProjectUpdate.isDone().should.be.true
+            togglProjectCreation.isDone().should.be.false
 
             response.statusCode.should.be.equal 200
             project.id.should.be.equal 148091152
@@ -286,18 +305,19 @@ describe 'Integration', ->
           .send
             event_name: 'project:unarchived'
             event_data:
-              id: 6876
+              id: 5468
               name: 'I am no such Project'
 
           .then (response) ->
-            togglProjectFetching.isDone().should.be.true
+            todoistEmptyCommentFetching.isDone().should.be.true
+            todoistCommentCreation.isDone().should.be.true
             togglProjectUpdate.isDone().should.be.false
             togglProjectCreation.isDone().should.be.true
 
             response.statusCode.should.be.equal 200
 
             response.body.togglProject.name
-              .should.be.equal 'I am no such Project (6876)'
+              .should.be.equal 'I am no such Project'
 
             response.body.togglProject.wid.should.be.equal 3134975
 

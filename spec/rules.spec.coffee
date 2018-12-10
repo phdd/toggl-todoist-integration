@@ -11,9 +11,9 @@ chai.should()
 chai.use require 'chai-as-promised'
 chai.use require 'sinon-chai'
 
-projectFixture = require './fixtures/toggl-project.json'
-projectsFixture = require './fixtures/toggl-projects.json'
-taskFixture = require './fixtures/todoist-task.json'
+projectFixture = require './fixtures/toggl-project'
+projectsFixture = require './fixtures/toggl-projects'
+commentsFixture = require './fixtures/todoist-project-comments'
 
 describe 'Rules', ->
 
@@ -73,11 +73,11 @@ describe 'Rules', ->
 
         toggl.findProjectByName.should.have.been.calledOnce
         toggl.findProjectByName.should.have.been
-          .calledWith 'Test Project (123)'
+          .calledWith 'Test Project'
 
         toggl.createProject.should.have.been.calledOnce
         toggl.createProject.should.have.been
-          .calledWith name: 'Test Project (123)'
+          .calledWith name: 'Test Project'
 
       it 'should not create the project if it exists already', ->
         toggl.findProjectByName = sinon.stub()
@@ -89,7 +89,7 @@ describe 'Rules', ->
 
         toggl.findProjectByName.should.have.been.calledOnce
         toggl.findProjectByName.should.have.been
-          .calledWith 'An awesome project (123)'
+          .calledWith 'An awesome project'
 
         toggl.createProject.should.not.have.been.called
 
@@ -105,7 +105,7 @@ describe 'Rules', ->
         await rules.project_archived id: 123, name: 'Project C'
 
         toggl.findProjectByName.should.have.been.calledOnce
-        toggl.findProjectByName.should.have.been.calledWith 'Project C (123)'
+        toggl.findProjectByName.should.have.been.calledWith 'Project C'
 
         toggl.updateProject.should.have.been.calledOnce
         toggl.updateProject.should.have.been.calledWithMatch
@@ -123,35 +123,42 @@ describe 'Rules', ->
 
         toggl.findProjectByName.should.have.been.calledOnce
         toggl.findProjectByName.should.have.been
-          .calledWith 'This Project does not exist (123)'
+          .calledWith 'This Project does not exist'
 
         toggl.updateProject.should.not.have.been.called
 
     describe 'project:unarchived', ->
 
       it 'should restore a project', ->
-        toggl.findProjectByName = sinon.stub()
-          .returns Promise.resolve(projectFixture.data)
+        projectCreationRulesFor = sinon.stub rules, 'projectCreationRulesFor'
+        todoist.fetchProjectComments = sinon.stub()
+          .returns Promise.resolve([{
+            project_id: 1234
+            content: ':alarm_clock: [Toggl Timesheet](report-link)'
+          }])
 
+        toggl.projectIdFrom = sinon.stub().returns 654357
         toggl.updateProject = sinon.stub()
           .returns Promise.resolve(projectFixture.data)
 
         await rules.project_unarchived id: 123, name: 'Project C'
 
-        toggl.findProjectByName.should.have.been.calledOnce
-        toggl.findProjectByName.should.have.been.calledWith 'Project C (123)'
+        projectCreationRulesFor.restore()
+
+        todoist.fetchProjectComments.should.have.been.calledOnce
+        projectCreationRulesFor.should.not.have.been.called
 
         toggl.updateProject.should.have.been.calledOnce
         toggl.updateProject.should.have.been.calledWithMatch
-          id: 3134975
+          id: 654357
           active: true
 
       it 'should create a project if it does not exist', ->
         projectCreationRulesFor = sinon.stub rules, 'projectCreationRulesFor'
+        todoist.fetchProjectComments = sinon.stub()
+          .returns Promise.resolve([])
 
         toggl.updateProject = sinon.stub()
-        toggl.findProjectByName = sinon.stub()
-          .returns Promise.resolve(null)
 
         await rules.project_unarchived
           id: 113, name: 'This Project does not exist'
@@ -163,7 +170,7 @@ describe 'Rules', ->
         projectCreationRulesFor.should.have.been.calledOnce
         projectCreationRulesFor.should.have.been
           .calledWith { id: 113, name: 'This Project does not exist' },
-                      { name: 'This Project does not exist (113)' }
+                      { name: 'This Project does not exist' }
 
     describe 'project:deleted', ->
 
@@ -195,41 +202,55 @@ describe 'Rules', ->
         toggl.deleteProject.should.not.have.been.called
 
         toggl.findProjectByName.should.have.been
-          .calledWith 'This Project does not exist (123)'
+          .calledWith 'This Project does not exist'
 
     describe 'project:updated', ->
 
       it 'should update an existing project', ->
-        toggl.fetchProjects = sinon.stub()
-          .returns Promise.resolve(projectsFixture)
+        todoist.fetchProjectComments = sinon.stub()
+          .returns Promise.resolve([{
+            project_id: 1234
+            content: ':alarm_clock: [Toggl Timesheet](report-link)'
+          }])
+
+        toggl.projectIdFrom = sinon.stub().returns 654357
         toggl.updateProject = sinon.stub()
           .returns Promise.resolve(projectFixture)
 
-        result = await rules.project_updated id: 123, name: 'An awesome project'
+        projectCreationRulesFor = sinon.stub rules, 'projectCreationRulesFor'
 
-        toggl.fetchProjects.should.have.been.calledOnce
+        result = await rules.project_updated id: 1234, name: 'A project'
+
+        projectCreationRulesFor.restore()
+
         toggl.updateProject.should.have.been.calledOnce
         toggl.updateProject.should.have.been.calledWithMatch
-          id: 3134975
-          name: 'An awesome project (123)'
+          id: 654357
+          name: 'A project'
 
+        projectCreationRulesFor.should.not.have.been.called
         result.should.be.equal projectFixture
 
       it 'should create a non-existing project', ->
         projectCreationRulesFor = sinon.stub rules, 'projectCreationRulesFor'
+        todoist.fetchProjectComments = sinon.stub()
+          .returns Promise.resolve([{
+            project_id: 1234
+            content: 'Any other comment'
+          }])
 
         toggl.createProject = sinon.stub().returns Promise
         toggl.fetchProjects = sinon.stub()
           .returns Promise.resolve(projectsFixture)
 
-        result = await rules.project_updated id: 113, name: 'A project'
+        result = await rules.project_updated id: 1234, name: 'A project'
 
         projectCreationRulesFor.restore()
 
         projectCreationRulesFor.should.have.been.calledOnce
         projectCreationRulesFor.should.have.been
-          .calledWith { id: 113, name: 'A project' },
-                      { name: 'A project (113)' }
+          .calledWith { id: 1234, name: 'A project' },
+                      { name: 'A project' }
 
     describe 'item:added', ->
 
@@ -265,25 +286,25 @@ describe 'Rules', ->
         toggl.createProject.should.not.have.been.called
 
     it 'should create a corresponding ' +
-        'todoist task if the project has been created', ->
-      todoistTaskDto =
-        content: '* [:alarm_clock: Timesheet](report-link)'
+       'Todoist comment if the project has been created', ->
+      todoistCommentDto =
+        content: ':alarm_clock: [Toggl Timesheet](report-link)'
         project_id: 1234
 
       toggl.createProject = sinon.stub()
         .returns Promise.resolve(projectFixture)
       toggl.buildProjectReportLinkFor = sinon.stub()
         .returns Promise.resolve('report-link')
-      todoist.createTask = sinon.stub()
-        .returns Promise.resolve(todoistTaskDto)
+      todoist.createComment = sinon.stub()
+        .returns Promise.resolve(todoistCommentDto)
 
       result = await rules.projectCreationRulesFor { id: 1234 }, projectFixture
 
       toggl.createProject.should.have.been.calledOnce
       toggl.createProject.should.have.been.calledWith projectFixture
 
-      todoist.createTask.should.have.been.calledOnce
-      todoist.createTask.should.have.been.calledWith todoistTaskDto
+      todoist.createComment.should.have.been.calledOnce
+      todoist.createComment.should.have.been.calledWith todoistCommentDto
   
       result.togglProject.should.be.equal projectFixture
-      result.todoistTask.should.be.equal todoistTaskDto
+      result.todoistComment.should.be.equal todoistCommentDto
