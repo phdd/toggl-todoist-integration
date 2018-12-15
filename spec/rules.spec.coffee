@@ -31,6 +31,9 @@ describe 'Rules', ->
         warn: ->
         error: ->
 
+    toggl.workspaceId = 3134975
+    rules.init toggl, todoist
+
   describe 'Event Forwarding', ->
 
     it 'should consume valid events', ->
@@ -39,8 +42,6 @@ describe 'Rules', ->
 
       rules.forward event_name: 'project:added', event_data: 'Hi there!'
         .should.eventually.be.equal 'Hi there!'
-
-      projectAdded.restore()
 
       projectAdded.should.have.been.calledOnce
 
@@ -53,8 +54,6 @@ describe 'Rules', ->
         .should.be.rejectedWith 'Event "do:this" cannot be handled'
 
   describe 'Reaction on Project Events', ->
-
-    todoist = {}
 
     beforeEach ->
       toggl.workspaceId = 3134975
@@ -143,8 +142,6 @@ describe 'Rules', ->
 
         await rules.project_unarchived id: 123, name: 'Project C'
 
-        projectCreationRulesFor.restore()
-
         todoist.fetchProjectComments.should.have.been.calledOnce
         projectCreationRulesFor.should.not.have.been.called
 
@@ -162,8 +159,6 @@ describe 'Rules', ->
 
         await rules.project_unarchived
           id: 113, name: 'This Project does not exist'
-
-        projectCreationRulesFor.restore()
 
         toggl.updateProject.should.not.have.been.called
 
@@ -221,8 +216,6 @@ describe 'Rules', ->
 
         result = await rules.project_updated id: 1234, name: 'A project'
 
-        projectCreationRulesFor.restore()
-
         toggl.updateProject.should.have.been.calledOnce
         toggl.updateProject.should.have.been.calledWithMatch
           id: 654357
@@ -245,45 +238,32 @@ describe 'Rules', ->
 
         result = await rules.project_updated id: 1234, name: 'A project'
 
-        projectCreationRulesFor.restore()
-
         projectCreationRulesFor.should.have.been.calledOnce
         projectCreationRulesFor.should.have.been
           .calledWith { id: 1234, name: 'A project' },
                       { name: 'A project' }
 
+  describe 'Reation on Item Events', ->
+    
+    beforeEach ->
+      rules.itemRelatedProjectCreationRuleFor = sinon.stub()
+        .returns Promise.resolve 'done'
+    
     describe 'item:added', ->
 
-      xit 'should create a project', ->
-        toggl.findProjectByName = sinon.stub()
-          .returns Promise.resolve(null)
+      it 'should trigger item related project creation rule', ->
+        result = await rules.item_added {}
+        rules.itemRelatedProjectCreationRuleFor.should.have.been.calledOnce
+        result.should.be.equal 'done'
 
-        toggl.createProject = sinon.stub()
-          .returns Promise.resolve(projectFixture.data)
+    describe 'item:update', ->
 
-        await rules.project_added id: 123, name: 'Test Project'
+      it 'should trigger item related project creation rule', ->
+        result = await rules.item_updated {}
+        rules.itemRelatedProjectCreationRuleFor.should.have.been.calledOnce
+        result.should.be.equal 'done'
 
-        toggl.findProjectByName.should.have.been.calledOnce
-        toggl.findProjectByName.should.have.been
-          .calledWith 'Test Project (123)'
-
-        toggl.createProject.should.have.been.calledOnce
-        toggl.createProject.should.have.been
-          .calledWith name: 'Test Project (123)'
-
-      xit 'should not create the project if it exists already', ->
-        toggl.findProjectByName = sinon.stub()
-          .returns Promise.resolve(projectFixture.data)
-
-        toggl.createProject = sinon.stub()
-
-        await rules.project_added id: 123, name: 'An awesome project'
-
-        toggl.findProjectByName.should.have.been.calledOnce
-        toggl.findProjectByName.should.have.been
-          .calledWith 'An awesome project (123)'
-
-        toggl.createProject.should.not.have.been.called
+  describe 'Complex Event Rules', ->
 
     it 'should create a corresponding ' +
        'Todoist comment if the project has been created', ->
@@ -308,3 +288,75 @@ describe 'Rules', ->
   
       result.togglProject.should.be.equal projectFixture
       result.todoistComment.should.be.equal todoistCommentDto
+
+    it 'should create a non-existing Toggl project on Todoist item events', ->
+      projectCreationRulesFor = sinon.stub rules, 'projectCreationRulesFor'
+      togglProjectIdFrom = sinon.stub rules, 'togglProjectIdFrom'
+        .returns Promise.resolve undefined
+      todoist.fetchProject = sinon.stub().returns Promise.resolve
+        name: 'Cool Project', id: 129
+
+      result = await rules.itemRelatedProjectCreationRuleFor
+        id: 1234, project_id: 129, content: 'An Item'
+
+      togglProjectIdFrom.should.have.been.calledOnce
+      togglProjectIdFrom.should.have.been.calledWith 129
+
+      todoist.fetchProject.should.have.been.calledOnce
+      todoist.fetchProject.should.have.been.calledWith 129
+
+      projectCreationRulesFor.should.have.been.calledOnce
+      projectCreationRulesFor.should.have.been
+        .calledWith { id: 129, name: 'Cool Project' },
+                    { name: 'Cool Project' }
+
+    it 'should ignore Todoist item events if Toggl project exists', ->
+      projectCreationRulesFor = sinon.stub rules, 'projectCreationRulesFor'
+      todoist.fetchProject = sinon.stub()
+      togglProjectIdFrom = sinon.stub rules, 'togglProjectIdFrom'
+        .returns Promise.resolve 129
+
+      result = await rules.itemRelatedProjectCreationRuleFor
+        id: 1234, project_id: 129, content: 'An Item'
+
+      togglProjectIdFrom.should.have.been.calledOnce
+      togglProjectIdFrom.should.have.been.calledWith 129
+
+      todoist.fetchProject.should.not.have.been.called
+      projectCreationRulesFor.should.not.have.been.called
+
+  describe 'Helper Methods', ->
+
+    describe 'Todoist-Toggl Project ID mapping', ->
+
+      comment =
+        content: ':alarm_clock: [Toggl Timesheet](report-link)'
+        project_id: 1234
+
+      beforeEach ->
+        toggl.projectIdFrom = sinon.stub().returns 234
+        todoist.fetchProjectComments = sinon.stub()
+          .returns Promise.resolve [ comment ]
+
+      it 'should resolve existing mappings', ->
+        togglProjectId = await rules.togglProjectIdFrom 1234
+        
+        todoist.fetchProjectComments.should.have.been.calledOnce
+        todoist.fetchProjectComments.should.have.been.calledWith 1234
+
+        toggl.projectIdFrom.should.have.been.calledOnce
+        toggl.projectIdFrom.should.have.been.calledWith 'report-link'
+
+        togglProjectId.should.be.equal 234
+
+      it 'should return non-existing mappings properly', ->
+        comment.content = 'Hello Project!'
+        togglProjectId = await rules.togglProjectIdFrom 1234
+        
+        todoist.fetchProjectComments.should.have.been.calledOnce
+        todoist.fetchProjectComments.should.have.been.calledWith 1234
+
+        toggl.projectIdFrom.should.not.have.been.called
+
+        chai.expect(togglProjectId).to.be.equal undefined
+        

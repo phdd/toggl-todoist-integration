@@ -3,7 +3,7 @@
 process.env.NODE_ENV = 'test'
 
 chai = require 'chai'
-sinon = require 'sinon'
+sinon = require('sinon').createSandbox()
 stubbed = require 'proxyquire'
 
 should = chai.should()
@@ -30,6 +30,9 @@ describe 'Middleware', ->
         warn: ->
         error: ->
 
+  afterEach ->
+    sinon.restore()
+
   it 'should depend on secrets from Webtask.io', ->
     (() -> middleware.secretsFor {})
       .should.throw Error, 'Webtask.io Secrets Missing'
@@ -41,19 +44,13 @@ describe 'Middleware', ->
     (() -> middleware.init()())
       .should.throw Error, 'Secret "todoistClientSecret" missing'
 
-    secretsFor.restore()
-
   describe 'Initialization', ->
 
     secretsFor = null
-    next = null
 
     beforeEach ->
       secretsFor = sinon.stub middleware, 'secretsFor'
         .returns mockSecrets
-
-    afterEach ->
-      secretsFor.restore()
 
     it 'should initialize Toggl, Todoist and Rules once', ->
       toggl = init: sinon.stub().returns Promise.resolve()

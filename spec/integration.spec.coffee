@@ -14,7 +14,10 @@ commentsFixture = require './fixtures/todoist-project-comments'
 
 chai.should()
 
-describe 'Integration', ->
+nock.disableNetConnect()
+nock.enableNetConnect /127\.0\.0\.1/
+
+describe 'Integration: Project Events', ->
 
   app = null
   middleware = null
@@ -320,7 +323,3 @@ describe 'Integration', ->
               .should.be.equal 'I am no such Project'
 
             response.body.togglProject.wid.should.be.equal 3134975
-
-  describe 'Task related Integration', ->
-
-    xit 'should create non-existing Toggle project on task creation', ->

@@ -70,3 +70,17 @@ describe 'Todoist', ->
       request.get.should.have.been.calledWith '/comments?project_id=129'
 
       comments.should.be.equal commentsFixture
+
+    it 'should fetch projects by ID', ->
+      project =
+          name: 'Cool Project'
+          id: 129
+    
+      request.get.returns Promise.resolve(project)
+    
+      project = await todoist.fetchProject 129
+    
+      request.get.should.have.been.calledOnce
+      request.get.should.have.been.calledWith '/projects/129'
+    
+      project.should.be.equal project

@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "mocha --require coffeescript/register --recursive './spec/*.coffee'",
+    "test": "mocha --require coffeescript/register --recursive './spec/**/*.spec.coffee'",
     "coverage": "nyc --reporter=html --reporter=text npm test && nyc report --reporter=text-lcov npm test > coverage/lcov.info",
     "deploy": "npm test && wt create --name todoist-toggl-integration --secrets-file secret.properties  --meta wt-compiler=webtask-tools/express --bundle app.js"
   },
